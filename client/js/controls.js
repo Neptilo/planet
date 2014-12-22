@@ -11,19 +11,19 @@ function handleKeyUp(event) {
 function handleKeys() {
     if (currentlyPressedKeys[37]) {
         // Left cursor key
-        character.bearing -= character.angularSpeed;
+        player.bearing -= player.angularSpeed;
     }
     if (currentlyPressedKeys[39]) {
         // Right cursor key
-        character.bearing += character.angularSpeed;
+        player.bearing += player.angularSpeed;
     }
     if (currentlyPressedKeys[38]) {
         // Up cursor key
-        character.move(character.speed);
+        player.move(player.speed);
     }
     if (currentlyPressedKeys[40]) {
         // Down cursor key
-        character.move(-character.speed);
+        player.move(-player.speed);
     }
     if (currentlyPressedKeys[33]) {
         // Page up

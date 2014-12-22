@@ -1,7 +1,8 @@
 function World() {
     this.radius = 100;
+    this.objects = [];
 
-    var geometry = new THREE.SphereGeometry(100, 100, 100);
+    var geometry = new THREE.SphereGeometry(this.radius, this.radius, this.radius);
     var texture = THREE.ImageUtils.loadTexture("img/crate.gif");
     var material = new THREE.MeshPhongMaterial({map: texture});
     this.model = new THREE.Mesh(geometry, material);
@@ -12,12 +13,12 @@ function World() {
 function Character() {
     this.speed = .1;
     this.angularSpeed = .02;
-    this.bearing = -Math.PI/2;
+    this.bearing = 2*Math.PI*Math.random();//-Math.PI/2;
     this.eyeAltitude = 1;
     this.sphericalPosition = {
         "altitude": .5, // because of the way of constructing the plane. This should be removed afterwards.
-        "theta": Math.PI/2,
-        "phi": 0
+        "theta": Math.PI*Math.random(),//Math.PI/2,
+        "phi": 2*Math.PI*Math.random()//0
     };
     this.size = {
         "width": .4,
