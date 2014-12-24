@@ -42,7 +42,7 @@ function Character() {
     this.model = new THREE.Mesh(geometry, material);
     this.model.receiveShadow = true;
     var boxGeometry = new THREE.BoxGeometry(this.size.width/2, this.size.height, .1);
-    var invisibleMaterial = new THREE.Material({transparent: true, opacity: 0});
+    var invisibleMaterial = new THREE.MeshBasicMaterial({transparent: true, opacity: 0});
     var box = new THREE.Mesh(boxGeometry, invisibleMaterial);
     this.model.add(box);
     box.castShadow = true;
