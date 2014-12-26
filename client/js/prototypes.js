@@ -10,20 +10,17 @@ function World() {
     this.model.castShadow = true;
 }
 
-function Character() {
+function Character(data) {
     this.speed = .1;
     this.angularSpeed = .02;
-    this.bearing = 2*Math.PI*Math.random();//-Math.PI/2;
+    this.bearing = data.bearing;
     this.eyeAltitude = 1;
-    this.sphericalPosition = {
-        "altitude": .5, // because of the way of constructing the plane. This should be removed afterwards.
-        "theta": Math.PI*Math.random(),//Math.PI/2,
-        "phi": 2*Math.PI*Math.random()//0
-    };
+    this.sphericalPosition = data.sphericalPosition;
     this.size = {
         "width": .4,
         "height": 1
     };
+    this.currentActions = {};
     
     var geometry = new THREE.PlaneGeometry(this.size.width, this.size.height);
     var widthRatio = 254/256;
@@ -48,10 +45,10 @@ function Character() {
     box.castShadow = true;
 }
 
-Character.prototype.move = function(speed) {
+Character.prototype.move = function(speed, worldRadius) {
     var theta = this.sphericalPosition.theta;
     var b = this.bearing;
-    var d = speed/(world.radius+this.sphericalPosition.altitude+this.eyeAltitude);
+    var d = speed/(worldRadius+this.sphericalPosition.altitude+this.eyeAltitude);
     var newTheta = Math.acos(Math.cos(theta)*Math.cos(d)+Math.sin(theta)*Math.sin(d)*Math.cos(b));
     var dTheta = newTheta-theta;
     this.sphericalPosition.theta = newTheta;

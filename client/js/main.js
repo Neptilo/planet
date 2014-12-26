@@ -1,6 +1,14 @@
+function createCharacter(characterId, characterData, world) {
+    var character = new Character(characterData);
+    world.objects[characterId] = character;
+    character.model.rotation.order = 'ZXY';
+    world.model.add(character.model);
+}
+
+function run() {
 // set up Three.js
 var scene = new THREE.Scene();
-var camera = new PlayerCamera();
+camera = new PlayerCamera();
 var renderer = new THREE.WebGLRenderer();
 renderer.shadowMapEnabled = true;
 renderer.shadowMapType = THREE.PCFSoftShadowMap;
@@ -9,6 +17,7 @@ renderer.setSize(resolution*window.innerWidth, resolution*window.innerHeight);
 var canvas = renderer.domElement;
 canvas.style.display = 'block';
 document.body.appendChild(canvas);
+document.body.style.margin = '0';
 
 // controls
 document.onkeydown = handleKeyDown;
@@ -24,16 +33,12 @@ if (canvas.addEventListener) {
 }
 
 // populate scene with objects
-var world = new World();
+world = new World();
 scene.add(world.model);
-var characterNumber = 100;
-for (var i = 0; i < characterNumber; i++) {
-    var character = new Character();
-    world.objects.push(character);
-    character.model.rotation.order = 'ZXY';
-    world.model.add(character.model);
-}
-var player = world.objects[0];
+for (var i in characters)
+    createCharacter(i, characters[i], world);
+characters = null; // We won't need it anymore.
+player = world.objects[clientId]; // global to be accessible in handleKeyDown and handleKeyUp
 var pivot = new THREE.Object3D();
 player.model.add(pivot);
 pivot.position.y = player.eyeAltitude-player.size.height/2;
@@ -56,10 +61,10 @@ scene.add(ambient);
 function render() {
     requestAnimationFrame(render);
 
-    handleKeys();
+    handleActions(world);
 
     // update scene
-    for (i = 0; i < characterNumber; i++) {
+    for (var i in world.objects) {
         var character = world.objects[i];
         character.model.position.x = (world.radius+character.sphericalPosition.altitude)*Math.sin(character.sphericalPosition.theta)*Math.sin(character.sphericalPosition.phi);
         character.model.position.y = -(world.radius+character.sphericalPosition.altitude)*Math.sin(character.sphericalPosition.theta)*Math.cos(character.sphericalPosition.phi);
@@ -78,11 +83,9 @@ function render() {
     camera.position.z = camera.distance;
 
     // animate
-    for (var i = 1; i < characterNumber; i++) {
-        world.objects[i].move(world.objects[i].speed);
-    }
 
     renderer.render(scene, camera);
 }
 
 render();
+}
