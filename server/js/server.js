@@ -1,6 +1,5 @@
-function World() {
+function Planet() {
     this.radius = 100;
-    this.objects = [];
 }
 
 function Character(data) {
@@ -19,21 +18,27 @@ function Character(data) {
 Character.prototype.move = function(speed) {
     var theta = this.sphericalPosition.theta;
     var b = this.bearing;
-    var d = speed/(world.radius+this.sphericalPosition.altitude+this.eyeAltitude);
+    var d = speed/(planet.radius+this.sphericalPosition.altitude+this.eyeAltitude);
     var newTheta = Math.acos(Math.cos(theta)*Math.cos(d)+Math.sin(theta)*Math.sin(d)*Math.cos(b));
     var dTheta = newTheta-theta;
     this.sphericalPosition.theta = newTheta;
     this.sphericalPosition.phi += Math.atan2(
             Math.sin(b)*Math.sin(d)*Math.sin(theta),
             Math.cos(d)-Math.cos(theta)*Math.cos(newTheta));
-    this.bearing = Math.atan2(
-            Math.sign(d)*Math.sin(b)*Math.sin(d)*Math.sin(theta),
-            Math.sign(d)*(Math.cos(d)*Math.cos(newTheta)-Math.cos(theta)));
+    if (d >= 0)
+        this.bearing = Math.atan2(
+                Math.sin(b)*Math.sin(d)*Math.sin(theta),
+                Math.cos(d)*Math.cos(newTheta)-Math.cos(theta));
+    else
+        this.bearing = Math.atan2(
+                -Math.sin(b)*Math.sin(d)*Math.sin(theta),
+                -(Math.cos(d)*Math.cos(newTheta)-Math.cos(theta)));
 }
 
 var WebSocketServer = require('ws').Server;
 var clientNumber = 0;
-var world = new World();
+var planet = new Planet();
+var characters = [];
 var activeConnections = {};
 var wss = new WebSocketServer({port: 8010});
 console.log("Server started");
@@ -50,7 +55,7 @@ wss.on('connection', function(ws) {
     };
 
     // update characters data
-    world.objects[clientNumber] = new Character(characterData);
+    characters[clientNumber] = new Character(characterData);
 
     var message;
 
@@ -58,7 +63,7 @@ wss.on('connection', function(ws) {
     message = {
         'action': 'acceptConnection',
         'clientId': clientNumber,
-        'characters': world.objects
+        'characters': characters
     }
     ws.send(JSON.stringify(message));
 
@@ -91,20 +96,24 @@ wss.on('connection', function(ws) {
 
         switch (m.action) {
             case 'setAction':
-                world.objects[clientId].currentActions[m.which] = m.value;
-                // tell others that this guy made an action
+                var character = characters[clientId];
+                character.currentActions[m.which] = m.value;
+                // tell everyone that this guy made an action
                 var message = {
                     'action': 'setAction',
                     'characterId': clientId,
                     'which': m.which,
                     'value': m.value
                 };
+                // If it is the end of a movement, include position and bearing informations to the message.
+                if (!m.value) {
+                    message.position = character.sphericalPosition;
+                    message.bearing = character.bearing;
+                }
                 for (var i in activeConnections) {
-                    if (i != clientId) {
-                        var client = activeConnections[i];
-                        console.log(JSON.stringify(message));
-                        client.send(JSON.stringify(message));
-                    }
+                    var client = activeConnections[i];
+                    console.log(JSON.stringify(message));
+                    client.send(JSON.stringify(message));
                 }
                 break;
             default:
@@ -114,8 +123,8 @@ wss.on('connection', function(ws) {
 });
 
 function handleMovements() {
-    for (var i in world.objects) {
-        var character = world.objects[i];
+    for (var i in characters) {
+        var character = characters[i];
         var actions = character.currentActions;
         if (actions['left'])
             character.bearing -= character.angularSpeed;
@@ -124,6 +133,20 @@ function handleMovements() {
         if (actions['forward'])
             character.move(character.speed);
         if (actions['back'])
-            character.move(-chatacter.speed);
+            character.move(-character.speed);
     }
 }
+
+var lastTime = 0;
+
+function tick() {
+    setTimeout(tick, 15);
+    var timeNow = new Date().getTime();
+    if (lastTime != 0) {
+        var deltaTime = timeNow-lastTime;
+        handleMovements();
+    }
+    lastTime = timeNow;
+}
+
+tick();

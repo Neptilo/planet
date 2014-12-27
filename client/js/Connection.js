@@ -34,7 +34,12 @@ Connection.onMessage = function(evt) {
             Scene.createCharacter(m.characterId, m.characterData);
             break;
         case 'setAction':
-            Scene.objects[m.characterId].currentActions[m.which] = m.value;
+            var character = Scene.objects[m.characterId];
+            character.currentActions[m.which] = m.value;
+            if (m.position != undefined)
+                character.sphericalPosition = m.position;
+            if (m.bearing != undefined)
+                character.bearing = m.bearing;
             break;
         default:
             console.log('Unexpected Websocket response: '+m.action);

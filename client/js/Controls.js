@@ -57,7 +57,8 @@ Controls.switchAction = function(event, on) {
     if (action) {
         for (var i in Controls.characterActions) {
             if (action == Controls.characterActions[i]) {
-                Scene.player.currentActions[action] = on;
+                // wait for server agreement before moving
+                // Scene.player.currentActions[action] = on;
                 Controls.sendActionMessage(action, on);
                 break;
             }
