@@ -60,6 +60,7 @@ View.makeCharacter = function(width, height) {
     var texture = THREE.ImageUtils.loadTexture("img/man.png");
     var material = new THREE.MeshPhongMaterial({map: texture});
     material.alphaTest = .9;
+    material.side = THREE.DoubleSide;
     var model = new THREE.Mesh(geometry, material);
     model.receiveShadow = true;
     var boxGeometry = new THREE.BoxGeometry(width/2, height, .1);
