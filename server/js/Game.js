@@ -10,22 +10,22 @@ Game.tick = function() {
     var timeNow = new Date().getTime();
     if (Game.lastTime != 0) {
         var deltaTime = timeNow-Game.lastTime;
-        Game.handleMovements();
+        Game.handleMovements(deltaTime);
     }
     Game.lastTime = timeNow;
 }
 
-Game.handleMovements = function() {
+Game.handleMovements = function(deltaTime) {
     for (var i in Scene.characters) {
         var character = Scene.characters[i];
         var actions = character.currentActions;
         if (actions['left'])
-            character.bearing -= character.angularSpeed;
+            character.bearing -= deltaTime*character.angularSpeed;
         if (actions['right'])
-            character.bearing += character.angularSpeed;
+            character.bearing += deltaTime*character.angularSpeed;
         if (actions['forward'])
-            character.move(character.speed);
+            character.move(deltaTime*character.speed);
         if (actions['back'])
-            character.move(-character.speed);
+            character.move(-deltaTime*character.speed);
     }
 }

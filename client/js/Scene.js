@@ -28,8 +28,8 @@ Scene.Planet = function() {
 }
 
 Scene.Character = function(data) {
-    this.speed = .1;
-    this.angularSpeed = .02;
+    this.speed = .01;
+    this.angularSpeed = .002;
     this.bearing = data.bearing;
     this.eyeAltitude = 1;
     this.sphericalPosition = data.sphericalPosition;

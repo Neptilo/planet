@@ -28,7 +28,7 @@ Connection.onMessage = function(evt) {
             View.init(); // set up Three.js scene
             Controls.init();
             Scene.init(); // populate scene with objects
-            Game.render();
+            Game.init();
             break;
         case 'putNewCharacter':
             Scene.createCharacter(m.characterId, m.characterData);

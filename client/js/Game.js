@@ -1,9 +1,18 @@
 Game = {};
 
-Game.render = function() {
-    requestAnimationFrame(Game.render);
+Game.init = function() {
+    Game.lastTime = 0;
+    Game.tick();
+}
 
-    Controls.handleActions(Scene);
+Game.tick = function() {
+    requestAnimationFrame(Game.tick, 15);
+    var timeNow = new Date().getTime();
+    if (Game.lastTime != 0) {
+        var deltaTime = timeNow-Game.lastTime;
+        Controls.handleActions(deltaTime);
+    }
+    Game.lastTime = timeNow;
 
     // update scene
     for (var i in Scene.objects) {

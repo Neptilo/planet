@@ -80,19 +80,19 @@ Controls.handleKeyUp = function(event) {
     Controls.switchAction(event, false);
 }
 
-Controls.handleActions = function() {
+Controls.handleActions = function(deltaTime) {
     var characters = Scene.objects;
     for (var i in characters) {
         var character = characters[i];
         var actions = character.currentActions;
         if (actions['left'])
-            character.bearing -= character.angularSpeed;
+            character.bearing -= deltaTime*character.angularSpeed;
         if (actions['right'])
-            character.bearing += character.angularSpeed;
+            character.bearing += deltaTime*character.angularSpeed;
         if (actions['forward'])
-            character.move(character.speed, Scene.planet.radius);
+            character.move(deltaTime*character.speed, Scene.planet.radius);
         if (actions['back'])
-            character.move(-character.speed, Scene.planet.radius);
+            character.move(-deltaTime*character.speed, Scene.planet.radius);
     }
     var actions = View.camera.currentActions;
     if (actions['zoomOut'])
