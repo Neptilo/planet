@@ -8,6 +8,7 @@ Connection.init = function() {
     console.log('Server started');
 
     wss.on('connection', Connection.onConnection);
+    Connection.tick();
 }
 
 Connection.onConnection = function(ws) {
@@ -71,25 +72,36 @@ Connection.onMessage = function(message, ws) {
         case 'setAction':
             var character = Scene.characters[clientId];
             character.currentActions[m.which] = m.value;
-            // tell everyone that this guy made an action
-            var message = {
-                'action': 'setAction',
-                'characterId': clientId,
-                'which': m.which,
-                'value': m.value
-            };
-            // If it is the end of a movement, include position and bearing informations to the message.
-            if (!m.value) {
-                message.position = character.sphericalPosition;
-                message.bearing = character.bearing;
-            }
-            for (var i in Connection.activeConnections) {
-                var client = Connection.activeConnections[i];
-                console.log(JSON.stringify(message));
-                client.send(JSON.stringify(message));
-            }
             break;
         default:
             console.log('Received unexpected action');
+    }
+}
+
+Connection.tick = function() {
+    setTimeout(Connection.tick, 45);
+    Connection.updateState();
+}
+
+Connection.updateState = function() {
+    var characterStates = [];
+    for (var i in Scene.characters) {
+        var character = Scene.characters[i];
+        var state = {};
+        state.bearing = character.bearing;
+        state.sphericalPosition = character.sphericalPosition;
+        state.currentActions = character.currentActions;
+        characterStates[i] = state;
+    }
+
+    var message = {
+        'action': 'updateState',
+        'characterStates': characterStates
+    }
+
+    for (var i in Connection.activeConnections) {
+        var client = Connection.activeConnections[i];
+        console.log(JSON.stringify(message));
+        client.send(JSON.stringify(message));
     }
 }

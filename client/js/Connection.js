@@ -19,7 +19,6 @@ Connection.onClose = function(evt) {
 }
 
 Connection.onMessage = function(evt) {
-    console.log('WebSocket server responded: '+evt.data);
     var m = JSON.parse(evt.data);
     switch (m.action) {
         case 'acceptConnection':
@@ -33,13 +32,14 @@ Connection.onMessage = function(evt) {
         case 'putNewCharacter':
             Scene.createCharacter(m.characterId, m.characterData);
             break;
-        case 'setAction':
-            var character = Scene.objects[m.characterId];
-            character.currentActions[m.which] = m.value;
-            if (m.position != undefined)
-                character.sphericalPosition = m.position;
-            if (m.bearing != undefined)
-                character.bearing = m.bearing;
+        case 'updateState':
+            for (var i in m.characterStates) {
+                var character = Scene.objects[i];
+                var state = m.characterStates[i];
+                character.bearing = state.bearing;
+                character.sphericalPosition = state.sphericalPosition;
+                character.currentActions = state.currentActions;
+            }
             break;
         default:
             console.log('Unexpected Websocket response: '+m.action);
