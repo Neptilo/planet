@@ -32,6 +32,9 @@ Connection.onMessage = function(evt) {
         case 'putNewCharacter':
             Scene.createCharacter(m.characterId, m.characterData);
             break;
+        case 'removeCharacter':
+            Scene.removeCharacter(m.characterId);
+            break;
         case 'updateState':
             for (var i in m.characterStates) {
                 var character = Scene.objects[i];

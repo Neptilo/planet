@@ -2,7 +2,7 @@ Connection = {};
 
 Connection.init = function() {
     Connection.clientNumber = 0;
-    Connection.activeConnections = {};
+    Connection.activeConnections = [];
     var WebSocketServer = require('ws');
     var wss = new WebSocketServer.Server({port: 8010});
     console.log('Server started');
@@ -12,6 +12,7 @@ Connection.init = function() {
 }
 
 Connection.onConnection = function(ws) {
+    console.log('Connected client #%s', Connection.clientNumber);
     // generate new character data
     var characterData = {
         'sphericalPosition': {
@@ -40,7 +41,7 @@ Connection.onConnection = function(ws) {
         'action': 'putNewCharacter',
         'characterId': Connection.clientNumber,
         'characterData': characterData
-    }
+    };
     for (var i in Connection.activeConnections) {
         var client = Connection.activeConnections[i];
         client.send(JSON.stringify(message));
@@ -51,8 +52,31 @@ Connection.onConnection = function(ws) {
 
     ws.on('message', function(message) {
         Connection.onMessage(message, ws);
-    }
-);
+    });
+    ws.on('close', function(code) {
+
+        // find client id
+        var clientId;
+        for (var i in Connection.activeConnections) {
+            if (Connection.activeConnections[i] == ws) {
+                clientId = i;
+                break;
+            }
+        }
+        console.log('Disconnected client #%s', clientId);
+        delete Scene.characters[clientId];
+
+        // update active connections
+        delete Connection.activeConnections[clientId];
+
+        // tell other clients that this one left
+        var message = {
+            'action': 'removeCharacter',
+            'characterId': clientId
+        };
+        for (var i in Connection.activeConnections)
+            Connection.activeConnections[i].send(JSON.stringify(message));
+    });
 }
 
 Connection.onMessage = function(message, ws) {
@@ -84,7 +108,7 @@ Connection.tick = function() {
 }
 
 Connection.updateState = function() {
-    var characterStates = [];
+    var characterStates = {};
     for (var i in Scene.characters) {
         var character = Scene.characters[i];
         var state = {};
@@ -101,7 +125,6 @@ Connection.updateState = function() {
 
     for (var i in Connection.activeConnections) {
         var client = Connection.activeConnections[i];
-        console.log(JSON.stringify(message));
         client.send(JSON.stringify(message));
     }
 }

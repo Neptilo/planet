@@ -2,7 +2,7 @@ Scene = {};
 
 Scene.init = function() {
     Scene.planet = new Scene.Planet;
-    Scene.characters = [];
+    Scene.characters = {};
 }
 
 Scene.Planet = function() {
