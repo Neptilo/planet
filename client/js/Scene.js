@@ -18,7 +18,6 @@ Scene.init = function() {
 Scene.createCharacter = function(characterId, characterData) {
     var character = new Scene.Character(characterData);
     Scene.objects[characterId] = character;
-    console.log('object %s created (Scene.objects: %s)', characterId, Scene.objects);
     character.model.rotation.order = 'ZXY';
     Scene.planet.model.add(character.model);
 }
@@ -26,9 +25,7 @@ Scene.createCharacter = function(characterId, characterData) {
 Scene.removeCharacter = function(characterId) {
     var character = Scene.objects[characterId];
     Scene.planet.model.remove(character.model);
-    console.log('object %s deleted (Scene.objects: ', characterId);
     delete Scene.objects[characterId];
-    console.log('%s)', Scene.objects);
 }
 
 Scene.Planet = function() {

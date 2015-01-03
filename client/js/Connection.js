@@ -54,6 +54,5 @@ Connection.onError = function(evt) {
 }
 
 Connection.send = function(message) {
-    console.log("WebSocket client sent: " + message);
     Connection.ws.send(message);
 }

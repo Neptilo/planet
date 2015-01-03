@@ -80,7 +80,6 @@ Connection.onConnection = function(ws) {
 }
 
 Connection.onMessage = function(message, ws) {
-    console.log('Received from client: %s', message);
     var m = JSON.parse(message);
 
     // find client id
