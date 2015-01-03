@@ -5,14 +5,14 @@ Connection.init = function() {
     Connection.activeConnections = [];
     var WebSocketServer = require('ws');
     var wss = new WebSocketServer.Server({port: 8010});
-    console.log('Server started');
+    console.info('Server started');
 
     wss.on('connection', Connection.onConnection);
     Connection.tick();
 }
 
 Connection.onConnection = function(ws) {
-    console.log('Connected client #%s', Connection.clientNumber);
+    console.info('Connected client #%s', Connection.clientNumber);
     // generate new character data
     var characterData = {
         'sphericalPosition': {
@@ -63,7 +63,7 @@ Connection.onConnection = function(ws) {
                 break;
             }
         }
-        console.log('Disconnected client #%s', clientId);
+        console.info('Disconnected client #%s', clientId);
         delete Scene.characters[clientId];
 
         // update active connections
@@ -97,7 +97,7 @@ Connection.onMessage = function(message, ws) {
             character.currentActions[m.which] = m.value;
             break;
         default:
-            console.log('Received unexpected action');
+            console.warn('Received unexpected action');
     }
 }
 

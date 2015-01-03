@@ -11,11 +11,11 @@ Connection.init = function() {
 }
 
 Connection.onOpen = function(evt) {
-    console.log("Connected to WebSocket server");
+    console.info("Connected to WebSocket server");
 }
 
 Connection.onClose = function(evt) {
-    console.log("Disconnected from WebSocket server");
+    console.info("Disconnected from WebSocket server");
 }
 
 Connection.onMessage = function(evt) {
@@ -45,12 +45,12 @@ Connection.onMessage = function(evt) {
             }
             break;
         default:
-            console.log('Unexpected Websocket response: '+m.action);
+            console.warn('Unexpected Websocket response: '+m.action);
     }
 }
 
 Connection.onError = function(evt) {
-    console.log('WebSocket error: ' + evt.data);
+    console.error('WebSocket error: ' + evt.data);
 }
 
 Connection.send = function(message) {
