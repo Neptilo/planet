@@ -36,9 +36,69 @@ View.init = function() {
 }
 
 View.makePlanet = function(radius) {
-    var geometry = new THREE.SphereGeometry(radius, radius, radius);
-    var texture = THREE.ImageUtils.loadTexture("img/crate.gif");
+    var geometry = new THREE.Geometry();
+
+    var segments = 32;
+    var xInds = [[1, 2], [1, 0], [1, 2]];
+    var yInds = [[2, 1], [0, 1], [2, 1]];
+    var zInds = [[0, 0], [2, 2], [0, 0]];
+    var xSigns = [[1, -1], [1, 1], [1, 1]];
+    var ySigns = [[-1, 1], [1, 1], [1, 1]];
+    var zSigns = [[-1, 1], [-1, 1], [1, -1]];
+
+    for (var iSquare = 0; iSquare < 3; iSquare++) {
+        for (var jSquare = 0; jSquare < 2; jSquare++) {
+            for (var iVertex = 0; iVertex <= segments; iVertex++) {
+                var u = 2*iVertex/segments-1;
+                for (var jVertex = 0; jVertex <= segments; jVertex++) {
+                    var v = 2*jVertex/segments-1;
+                    var fac = radius/Math.sqrt(1+u*u+v*v);
+                    var coords = [];
+                    coords[0] = fac*u;
+                    coords[1] = fac*v;
+                    coords[2] = fac;
+                    var x = xSigns[iSquare][jSquare]*coords[xInds[iSquare][jSquare]];
+                    var y = ySigns[iSquare][jSquare]*coords[yInds[iSquare][jSquare]];
+                    var z = zSigns[iSquare][jSquare]*coords[zInds[iSquare][jSquare]];
+                    geometry.vertices.push(new THREE.Vector3(x, y, z));
+                }
+            }
+        }
+    }
+
+    var verticesPerSquare = (segments+1)*(segments+1);
+    var facesPerSquare = 2*segments*segments;
+    for (var iSquare = 0; iSquare < 3; iSquare++) {
+        for (var jSquare = 0; jSquare < 2; jSquare++) {
+            var squareInd = 2*iSquare+jSquare;
+            var vertexInd = verticesPerSquare*squareInd;
+            var faceInd = facesPerSquare*squareInd;
+            for (var iFace = 0; iFace < segments; iFace++) {
+                for (var jFace = 0; jFace < segments; jFace++) {
+                    geometry.faces.push(new THREE.Face3(
+                                vertexInd+(segments+1)*iFace+jFace,
+                                vertexInd+(segments+1)*(iFace+1)+jFace,
+                                vertexInd+(segments+1)*(iFace+1)+jFace+1));
+                    geometry.faces.push(new THREE.Face3(
+                                vertexInd+(segments+1)*iFace+jFace,
+                                vertexInd+(segments+1)*(iFace+1)+jFace+1,
+                                vertexInd+(segments+1)*iFace+jFace+1));
+                    geometry.faceVertexUvs[0][faceInd+2*(segments*iFace+jFace)] = [
+                        new THREE.Vector2((iSquare+iFace/segments)/3, (jSquare+jFace/segments)/2),
+                        new THREE.Vector2((iSquare+(iFace+1)/segments)/3, (jSquare+jFace/segments)/2),
+                        new THREE.Vector2((iSquare+(iFace+1)/segments)/3, (jSquare+(jFace+1)/segments)/2)];
+                    geometry.faceVertexUvs[0][faceInd+2*(segments*iFace+jFace)+1] = [
+                        new THREE.Vector2((iSquare+iFace/segments)/3, (jSquare+jFace/segments)/2),
+                        new THREE.Vector2((iSquare+(iFace+1)/segments)/3, (jSquare+(jFace+1)/segments)/2),
+                        new THREE.Vector2((iSquare+iFace/segments)/3, (jSquare+(jFace+1)/segments)/2)];
+                }
+            }
+        }
+    }
+
+    var texture = THREE.ImageUtils.loadTexture("img/map.png");
     var material = new THREE.MeshPhongMaterial({map: texture});
+    //var material = new THREE.MeshBasicMaterial({color: 'red'});
     var model = new THREE.Mesh(geometry, material);
     model.receiveShadow = true;
     model.castShadow = true;
