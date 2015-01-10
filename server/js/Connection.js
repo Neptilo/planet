@@ -16,11 +16,11 @@ Connection.onConnection = function(ws) {
     // generate new character data
     var characterData = {
         'sphericalPosition': {
-            'altitude': .5, // because of the way of constructing the planet. This should be removed afterwards.
-            'theta': Math.PI/2,//Math.PI*Math.random(),
-            'phi': 0.01*Connection.clientNumber//2*Math.PI*Math.random()
+            'altitude': 0,
+            'theta': Math.PI/4,//Math.PI*Math.random(),
+            'phi': 0//.01*Connection.clientNumber//2*Math.PI*Math.random()
         },
-        'bearing': Math.PI/2,//2*Math.PI*Math.random()
+        'bearing': 0,//2*Math.PI*Math.random()
     };
 
     // update characters data

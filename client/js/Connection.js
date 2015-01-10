@@ -40,7 +40,9 @@ Connection.onMessage = function(evt) {
                 var character = Scene.objects[i];
                 var state = m.characterStates[i];
                 character.bearing = state.bearing;
+                var a = character.sphericalPosition.altitude;
                 character.sphericalPosition = state.sphericalPosition;
+                character.sphericalPosition.altitude = a;
                 character.currentActions = state.currentActions;
             }
             break;

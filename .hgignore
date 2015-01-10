@@ -3,4 +3,4 @@ syntax: glob
 *~
 *.orig
 *.backup
-server/node_modules
+node_modules

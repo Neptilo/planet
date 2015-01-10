@@ -17,9 +17,11 @@ Game.tick = function() {
     // update scene
     for (var i in Scene.objects) {
         var character = Scene.objects[i];
-        character.model.position.x = (Scene.planet.radius+character.sphericalPosition.altitude)*Math.sin(character.sphericalPosition.theta)*Math.sin(character.sphericalPosition.phi);
-        character.model.position.y = -(Scene.planet.radius+character.sphericalPosition.altitude)*Math.sin(character.sphericalPosition.theta)*Math.cos(character.sphericalPosition.phi);
-        character.model.position.z = (Scene.planet.radius+character.sphericalPosition.altitude)*Math.cos(character.sphericalPosition.theta);
+        // +.5 for each coordinate because of the way of constructing the planet
+        // should be removed afterwards
+        character.model.position.x = (Scene.planet.radius+character.sphericalPosition.altitude+.5)*Math.sin(character.sphericalPosition.theta)*Math.sin(character.sphericalPosition.phi);
+        character.model.position.y = -(Scene.planet.radius+character.sphericalPosition.altitude+.5)*Math.sin(character.sphericalPosition.theta)*Math.cos(character.sphericalPosition.phi);
+        character.model.position.z = (Scene.planet.radius+character.sphericalPosition.altitude+.5)*Math.cos(character.sphericalPosition.theta);
         character.model.rotation.z = character.sphericalPosition.phi;
         character.model.rotation.x = character.sphericalPosition.theta+Math.PI/2; // because of the way the plane is created
         character.model.rotation.y = -character.bearing;

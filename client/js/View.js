@@ -35,24 +35,30 @@ View.init = function() {
     View.scene.add(View.ambient);
 }
 
-View.makePlanet = function(radius) {
+View.makePlanet = function(radius, altitudeMap, minAltitude, maxAltitude) {
     var geometry = new THREE.Geometry();
 
-    var segments = 32;
+    var segments = 64;
     var xInds = [[1, 2], [1, 0], [1, 2]];
     var yInds = [[2, 1], [0, 1], [2, 1]];
     var zInds = [[0, 0], [2, 2], [0, 0]];
     var xSigns = [[1, -1], [1, 1], [1, 1]];
     var ySigns = [[-1, 1], [1, 1], [1, 1]];
     var zSigns = [[-1, 1], [-1, 1], [1, -1]];
+    var altitudeCtx = altitudeMap.getContext('2d');
 
     for (var iSquare = 0; iSquare < 3; iSquare++) {
         for (var jSquare = 0; jSquare < 2; jSquare++) {
             for (var iVertex = 0; iVertex <= segments; iVertex++) {
                 var u = 2*iVertex/segments-1;
+                var xTex = Math.floor((altitudeMap.width-1)*(iSquare+iVertex/segments)/3);
                 for (var jVertex = 0; jVertex <= segments; jVertex++) {
                     var v = 2*jVertex/segments-1;
-                    var fac = radius/Math.sqrt(1+u*u+v*v);
+                    var yTex = Math.floor((altitudeMap.height-1)*(1-(jSquare+jVertex/segments)/2));
+                    var altitudePix = altitudeCtx.getImageData(xTex, yTex, 1, 1).data;
+                    // get red channel of pixel data
+                    var altitude = minAltitude+(maxAltitude-minAltitude)*altitudePix[0]/255;
+                    var fac = (radius+altitude)/Math.sqrt(1+u*u+v*v);
                     var coords = [];
                     coords[0] = fac*u;
                     coords[1] = fac*v;
@@ -96,9 +102,8 @@ View.makePlanet = function(radius) {
         }
     }
 
-    var texture = THREE.ImageUtils.loadTexture("img/map.png");
-    var material = new THREE.MeshPhongMaterial({map: texture});
-    //var material = new THREE.MeshBasicMaterial({color: 'red'});
+    var diffuseTexture = THREE.ImageUtils.loadTexture("img/map.png");
+    var material = new THREE.MeshPhongMaterial({map: diffuseTexture});
     var model = new THREE.Mesh(geometry, material);
     model.receiveShadow = true;
     model.castShadow = true;

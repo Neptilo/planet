@@ -90,9 +90,9 @@ Controls.handleActions = function(deltaTime) {
         if (actions['right'])
             character.bearing += deltaTime*character.angularSpeed;
         if (actions['forward'])
-            character.move(deltaTime*character.speed, Scene.planet.radius);
+            character.move(deltaTime*character.speed, Scene.planet);
         if (actions['back'])
-            character.move(-deltaTime*character.speed, Scene.planet.radius);
+            character.move(-deltaTime*character.speed, Scene.planet);
     }
     var actions = View.camera.currentActions;
     if (actions['zoomOut'])
