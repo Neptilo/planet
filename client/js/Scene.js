@@ -94,8 +94,9 @@ Scene.Character.prototype.move = function(speed, planet) {
     var u = uSigns[square[0]][square[1]]*newCoords[uInd]/Math.abs(w);
 
     var altitudeMap = planet.altitudeMap;
-    var xTex = Math.floor((altitudeMap.width-1)*(square[0]+(u+1)/2)/3);
-    var yTex = Math.floor((altitudeMap.height-1)*(1-(square[1]+(v+1)/2)/2));
+    var xTex = Math.round((altitudeMap.width-1)*(square[0]+(u+1)/2)/3);    
+    var yTex = Math.round((altitudeMap.height/2-1)*(1-(v+1)/2));
+    if (square[1] == 0) yTex += altitudeMap.height/2;
     var altitudeCtx = altitudeMap.getContext('2d');
     var altitudePix = altitudeCtx.getImageData(xTex, yTex, 1, 1).data;
 
