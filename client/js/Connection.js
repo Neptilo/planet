@@ -27,21 +27,28 @@ Connection.onMessage = function(evt) {
             View.init(); // set up Three.js scene
             Controls.init();
             Scene.init(); // populate scene with objects
-            Game.init();
             break;
         case 'putNewCharacter':
-            Scene.createCharacter(m.characterId, m.characterData);
+            if (Scene.objects != undefined)
+                Scene.createCharacter(m.characterId, m.characterData);
+            else
+                console.warn('Tried to add a new character while scene was not fully loaded')
             break;
         case 'removeCharacter':
-            Scene.removeCharacter(m.characterId);
+            if (Scene.objects != undefined)
+                Scene.removeCharacter(m.characterId);
+            else
+                console.warn('Tried to remove a character while scene was not fully loaded')
             break;
         case 'updateState':
-            for (var i in m.characterStates) {
-                var character = Scene.objects[i];
-                var state = m.characterStates[i];
-                character.bearing = state.bearing;
-                character.sphericalPosition = state.sphericalPosition;
-                character.currentActions = state.currentActions;
+            if (Scene.objects != undefined) {
+                for (var i in m.characterStates) {
+                    var character = Scene.objects[i];
+                    var state = m.characterStates[i];
+                    character.bearing = state.bearing;
+                    character.sphericalPosition = state.sphericalPosition;
+                    character.currentActions = state.currentActions;
+                }
             }
             break;
         default:

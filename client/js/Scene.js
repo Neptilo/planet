@@ -1,9 +1,10 @@
 Scene = {}
 
 Scene.init = function() {
-    Scene.planet = new Scene.Planet;
-    View.scene.add(Scene.planet.model);
+    Scene.planet = new Scene.Planet; // will in turn call makeWorld asynchronously
+}
 
+Scene.makeWorld = function() {
     Scene.objects = [];
     for (var i in Connection.characters)
         Scene.createCharacter(i, Connection.characters[i]);
@@ -13,6 +14,7 @@ Scene.init = function() {
     Scene.player.model.add(View.pivot);
     View.pivot.position.y = Scene.player.eyeAltitude-Scene.player.size.height/2;
     View.sun.target = Scene.player.model;
+    Game.init();
 }
 
 Scene.createCharacter = function(characterId, characterData) {
@@ -34,14 +36,22 @@ Scene.Planet = function() {
     this.maxAltitude = 2.5;
 
     // altitude
-    var img = document.createElement('img');
+    var planet = this;
+    var img = new Image;
+    img.onload = function() {
+        planet.setAltitudeMap(this);
+        planet.model = View.makePlanet(planet.radius, planet.altitudeMap, planet.minAltitude, planet.maxAltitude);
+        View.scene.add(planet.model);
+        Scene.makeWorld();
+    };
     img.src = 'img/altitude.png';
+}
+
+Scene.Planet.prototype.setAltitudeMap = function(img) {
     this.altitudeMap = document.createElement('canvas');
     this.altitudeMap.width = img.width;
     this.altitudeMap.height = img.height;
     this.altitudeMap.getContext('2d').drawImage(img, 0, 0);
-
-    this.model = View.makePlanet(this.radius, this.altitudeMap, this.minAltitude, this.maxAltitude);
 }
 
 Scene.Character = function(data) {
