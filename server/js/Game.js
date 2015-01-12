@@ -24,8 +24,18 @@ Game.handleMovements = function(deltaTime) {
         if (actions['right'])
             character.bearing += deltaTime*character.angularSpeed;
         if (actions['forward'])
-            character.move(deltaTime*character.speed);
+            character.move(deltaTime*character.speed, Scene.planet);
         if (actions['back'])
-            character.move(-deltaTime*character.speed);
+            character.move(-deltaTime*character.speed, Scene.planet);
     }
+}
+
+Game.getAltitudeFromUv = function(uSquare, vSquare, square, altitudeMap, minAltitude, maxAltitude) {
+    var xTex = Math.round((altitudeMap.width-1)*(square[0]+uSquare)/3);
+    var yTex = Math.round((altitudeMap.height/2-1)*(1-vSquare));
+    if (square[1] == 0) yTex += altitudeMap.height/2;
+    var altitudeCtx = altitudeMap.getContext('2d');
+    var altitudePix = altitudeCtx.getImageData(xTex, yTex, 1, 1).data;
+    // get red channel of pixel data
+    return minAltitude+(maxAltitude-minAltitude)*altitudePix[0]/255;
 }
