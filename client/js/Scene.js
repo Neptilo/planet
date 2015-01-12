@@ -93,15 +93,8 @@ Scene.Character.prototype.move = function(speed, planet) {
     var uInd = 3-wInd-vInd; // the remaining coordinate
     var u = uSigns[square[0]][square[1]]*newCoords[uInd]/Math.abs(w);
 
-    var altitudeMap = planet.altitudeMap;
-    var xTex = Math.round((altitudeMap.width-1)*(square[0]+(u+1)/2)/3);    
-    var yTex = Math.round((altitudeMap.height/2-1)*(1-(v+1)/2));
-    if (square[1] == 0) yTex += altitudeMap.height/2;
-    var altitudeCtx = altitudeMap.getContext('2d');
-    var altitudePix = altitudeCtx.getImageData(xTex, yTex, 1, 1).data;
-
-    // get red channel of pixel data
-    this.sphericalPosition.altitude = planet.minAltitude+(planet.maxAltitude-planet.minAltitude)*altitudePix[0]/255;
+    this.sphericalPosition.altitude = Game.getAltitudeFromUv((u+1)/2, (v+1)/2, square,
+        planet.altitudeMap, planet.minAltitude, planet.maxAltitude);
     this.sphericalPosition.theta = newTheta;
     this.sphericalPosition.phi = newPhi;
     this.bearing = Math.atan2(

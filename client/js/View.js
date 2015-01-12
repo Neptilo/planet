@@ -45,20 +45,16 @@ View.makePlanet = function(radius, altitudeMap, minAltitude, maxAltitude) {
     var xSigns = [[1, -1], [1, 1], [1, 1]];
     var ySigns = [[-1, 1], [1, 1], [1, 1]];
     var zSigns = [[-1, 1], [-1, 1], [1, -1]];
-    var altitudeCtx = altitudeMap.getContext('2d');
 
     for (var iSquare = 0; iSquare < 3; iSquare++) {
         for (var jSquare = 0; jSquare < 2; jSquare++) {
             for (var iVertex = 0; iVertex <= segments; iVertex++) {
                 var u = 2*iVertex/segments-1;
-                var xTex = Math.round((altitudeMap.width-1)*(iSquare+iVertex/segments)/3);
                 for (var jVertex = 0; jVertex <= segments; jVertex++) {
                     var v = 2*jVertex/segments-1;
-                    var yTex = Math.round((altitudeMap.height/2-1)*(1-jVertex/segments));
-                    if (jSquare == 0) yTex += altitudeMap.height/2;
-                    var altitudePix = altitudeCtx.getImageData(xTex, yTex, 1, 1).data;
-                    // get red channel of pixel data
-                    var altitude = minAltitude+(maxAltitude-minAltitude)*altitudePix[0]/255;
+                    var altitude = Game.getAltitudeFromUv(
+                        iVertex/segments, jVertex/segments, [iSquare, jSquare],
+                        altitudeMap, minAltitude, maxAltitude);
                     var fac = (radius+altitude)/Math.sqrt(1+u*u+v*v);
                     var coords = [];
                     coords[0] = fac*u;
