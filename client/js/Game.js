@@ -1,5 +1,7 @@
 Game = {};
 
+Game.slopeThreshold = 1;
+
 Game.init = function() {
     Game.lastTime = 0;
     Game.tick();

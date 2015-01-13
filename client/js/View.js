@@ -38,7 +38,7 @@ View.init = function() {
 View.makePlanet = function(planet) {
     var geometry = new THREE.Geometry();
 
-    var segments = 32;
+    var segments = 100;
     var xInds = [[1, 2], [1, 0], [1, 2]];
     var yInds = [[2, 1], [0, 1], [2, 1]];
     var zInds = [[0, 0], [2, 2], [0, 0]];

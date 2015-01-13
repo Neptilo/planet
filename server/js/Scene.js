@@ -45,16 +45,19 @@ Scene.Character.prototype.move = function(speed, planet) {
     var newPhi = this.sphericalPosition.phi+Math.atan2(
             Math.sin(b)*Math.sin(d)*Math.sin(theta),
             Math.cos(d)-Math.cos(theta)*Math.cos(newTheta));
-    this.sphericalPosition.altitude = Game.getAltitudeFromSphericalPosition(newTheta, newPhi, planet);
-    this.sphericalPosition.theta = newTheta;
-    this.sphericalPosition.phi = newPhi;
-    if (d >= 0)
-        this.bearing = Math.atan2(
-                Math.sin(b)*Math.sin(d)*Math.sin(theta),
-                Math.cos(d)*Math.cos(newTheta)-Math.cos(theta));
-    else
-        this.bearing = Math.atan2(
-                -Math.sin(b)*Math.sin(d)*Math.sin(theta),
-                -(Math.cos(d)*Math.cos(newTheta)-Math.cos(theta)));
+    var newAltitude = Game.getAltitudeFromSphericalPosition(newTheta, newPhi, planet);
+    if ((newAltitude-this.sphericalPosition.altitude)/Math.abs(speed) <= Game.slopeThreshold) {
+        this.sphericalPosition.altitude = newAltitude;
+        this.sphericalPosition.theta = newTheta;
+        this.sphericalPosition.phi = newPhi;
+        if (d >= 0)
+            this.bearing = Math.atan2(
+                    Math.sin(b)*Math.sin(d)*Math.sin(theta),
+                    Math.cos(d)*Math.cos(newTheta)-Math.cos(theta));
+        else
+            this.bearing = Math.atan2(
+                    -Math.sin(b)*Math.sin(d)*Math.sin(theta),
+                    -(Math.cos(d)*Math.cos(newTheta)-Math.cos(theta)));
+    }
 }
 
