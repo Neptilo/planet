@@ -35,7 +35,7 @@ View.init = function() {
     View.scene.add(View.ambient);
 }
 
-View.makePlanet = function(radius, altitudeMap, minAltitude, maxAltitude) {
+View.makePlanet = function(planet) {
     var geometry = new THREE.Geometry();
 
     var segments = 32;
@@ -52,10 +52,8 @@ View.makePlanet = function(radius, altitudeMap, minAltitude, maxAltitude) {
                 var u = 2*iVertex/segments-1;
                 for (var jVertex = 0; jVertex <= segments; jVertex++) {
                     var v = 2*jVertex/segments-1;
-                    var altitude = Game.getAltitudeFromUv(
-                        iVertex/segments, jVertex/segments, [iSquare, jSquare],
-                        altitudeMap, minAltitude, maxAltitude);
-                    var fac = (radius+altitude)/Math.sqrt(1+u*u+v*v);
+                    var altitude = Game.getAltitudeFromUv(iVertex/segments, jVertex/segments, [iSquare, jSquare], planet);
+                    var fac = (planet.radius+altitude)/Math.sqrt(1+u*u+v*v);
                     var coords = [];
                     coords[0] = fac*u;
                     coords[1] = fac*v;

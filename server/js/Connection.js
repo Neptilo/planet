@@ -14,13 +14,16 @@ Connection.init = function() {
 Connection.onConnection = function(ws) {
     console.info('Connected client #%s', Connection.clientNumber);
     // generate new character data
+    var theta = Math.PI*Math.random();
+    var phi = 2*Math.PI*Math.random();
+    var altitude = Game.getAltitudeFromSphericalPosition(theta, phi, Scene.planet);
     var characterData = {
         'sphericalPosition': {
-            'altitude': 0,
-            'theta': Math.PI/4,//Math.PI*Math.random(),
-            'phi': 0//.01*Connection.clientNumber//2*Math.PI*Math.random()
+            'altitude': altitude,
+            'theta': theta,
+            'phi': phi
         },
-        'bearing': 0,//2*Math.PI*Math.random()
+        'bearing': 2*Math.PI*Math.random()
     };
 
     // update characters data
