@@ -147,3 +147,10 @@ View.PlayerCamera.prototype.zoomIn = function() {
 View.PlayerCamera.prototype.zoomOut = function() {
     this.distance += .5/(this.distance+1/this.distance);
 }
+
+View.PlayerCamera.prototype.applyActions = function() {
+    if (this.currentActions['zoomOut'])
+        this.zoomOut();
+    if (this.currentActions['zoomIn'])
+        this.zoomIn();
+}

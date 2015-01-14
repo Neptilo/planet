@@ -47,6 +47,8 @@ Connection.onMessage = function(evt) {
                     var state = m.characterStates[i];
                     character.bearing = state.bearing;
                     character.sphericalPosition = state.sphericalPosition;
+                    character.altitude = state.altitude;
+                    character.groundAltitude = state.groundAltitude;
                     character.currentActions = state.currentActions;
                 }
             }

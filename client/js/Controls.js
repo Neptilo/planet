@@ -80,27 +80,6 @@ Controls.handleKeyUp = function(event) {
     Controls.switchAction(event, false);
 }
 
-Controls.handleActions = function(deltaTime) {
-    var characters = Scene.objects;
-    for (var i in characters) {
-        var character = characters[i];
-        var actions = character.currentActions;
-        if (actions['left'])
-            character.bearing -= deltaTime*character.angularSpeed;
-        if (actions['right'])
-            character.bearing += deltaTime*character.angularSpeed;
-        if (actions['forward'])
-            character.move(deltaTime*character.speed, Scene.planet);
-        if (actions['back'])
-            character.move(-deltaTime*character.speed, Scene.planet);
-    }
-    var actions = View.camera.currentActions;
-    if (actions['zoomOut'])
-        View.camera.zoomOut();
-    if (actions['zoomIn'])
-        View.camera.zoomIn();
-}
-
 Controls.handleMouseWheel = function(e) {
     var e = window.event || e; // old IE
     var delta = e.wheelDelta || -e.detail;

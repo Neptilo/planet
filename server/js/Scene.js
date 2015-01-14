@@ -22,42 +22,26 @@ Scene.Planet = function() {
         Scene.planet.altitudeMap.getContext('2d').drawImage(img, 0, 0);
         console.info('Altitude map loaded');
     });
+
+    this.gravity = .0001;
 }
 
 Scene.Character = function(data) {
+    // characteristics
     this.speed = .01;
     this.angularSpeed = .002;
-    this.bearing = data.bearing;
+    this.jumpSpeed = .01;
     this.eyeAltitude = 1;
-    this.sphericalPosition = data.sphericalPosition;
     this.size = {
         "width": .4,
         "height": 1
     };
+
+    // state
+    this.bearing = data.bearing;
+    this.sphericalPosition = data.sphericalPosition;
+    this.altitude = data.altitude;
+    this.groundAltitude = this.altitude;
+    this.velocity = [0, 0];
     this.currentActions = {};
 }
-
-Scene.Character.prototype.move = function(speed, planet) {
-    var theta = this.sphericalPosition.theta;
-    var b = this.bearing;
-    var d = speed/(Scene.planet.radius+this.sphericalPosition.altitude);
-    var newTheta = Math.acos(Math.cos(theta)*Math.cos(d)+Math.sin(theta)*Math.sin(d)*Math.cos(b));
-    var newPhi = this.sphericalPosition.phi+Math.atan2(
-            Math.sin(b)*Math.sin(d)*Math.sin(theta),
-            Math.cos(d)-Math.cos(theta)*Math.cos(newTheta));
-    var newAltitude = Game.getAltitudeFromSphericalPosition(newTheta, newPhi, planet);
-    if ((newAltitude-this.sphericalPosition.altitude)/Math.abs(speed) <= Game.slopeThreshold) {
-        this.sphericalPosition.altitude = newAltitude;
-        this.sphericalPosition.theta = newTheta;
-        this.sphericalPosition.phi = newPhi;
-        if (d >= 0)
-            this.bearing = Math.atan2(
-                    Math.sin(b)*Math.sin(d)*Math.sin(theta),
-                    Math.cos(d)*Math.cos(newTheta)-Math.cos(theta));
-        else
-            this.bearing = Math.atan2(
-                    -Math.sin(b)*Math.sin(d)*Math.sin(theta),
-                    -(Math.cos(d)*Math.cos(newTheta)-Math.cos(theta)));
-    }
-}
-
