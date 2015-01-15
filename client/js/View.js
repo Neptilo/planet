@@ -13,6 +13,7 @@ View.init = function() {
     View.renderer.setSize(
             View.resolution*window.innerWidth,
             View.resolution*window.innerHeight);
+    View.renderer.setClearColor(0x7EC0EE, 1);
     View.canvas = View.renderer.domElement;
     View.canvas.style.display = 'block';
     document.body.appendChild(View.canvas);
@@ -31,14 +32,14 @@ View.init = function() {
     View.sun.shadowCameraBottom = -16;
     View.scene.add(View.sun);
 
-    View.ambient = new THREE.AmbientLight(0x222222);
+    View.ambient = new THREE.AmbientLight(0x000420);
     View.scene.add(View.ambient);
 }
 
 View.makePlanet = function(planet) {
     var geometry = new THREE.Geometry();
 
-    var segments = 100;
+    var segments = 32;
     var xInds = [[1, 2], [1, 0], [1, 2]];
     var yInds = [[2, 1], [0, 1], [2, 1]];
     var zInds = [[0, 0], [2, 2], [0, 0]];
@@ -96,6 +97,9 @@ View.makePlanet = function(planet) {
             }
         }
     }
+
+    geometry.computeFaceNormals();
+    geometry.computeVertexNormals();
 
     var diffuseTexture = THREE.ImageUtils.loadTexture("img/map.png");
     var material = new THREE.MeshPhongMaterial({map: diffuseTexture});
