@@ -30,9 +30,9 @@ Game.tick = function() {
         character.model.rotation.y = -character.bearing;
     }
 
-    View.sun.position.x = Scene.player.model.position.x-1;
-    View.sun.position.y = Scene.player.model.position.y-1;
-    View.sun.position.z = Scene.player.model.position.z-1;
+    View.sun.position.x = Scene.player.model.position.x+4;
+    View.sun.position.y = Scene.player.model.position.y;
+    View.sun.position.z = Scene.player.model.position.z;
 
     View.pivot.rotation.x = View.camera.elevation-Math.PI/2;
 
