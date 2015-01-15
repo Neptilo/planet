@@ -60,7 +60,7 @@ Scene.Character = function(data) {
     // characteristics
     this.speed = .01;
     this.angularSpeed = .002;
-    this.jumpSpeed = .01;
+    this.jumpSpeed = .02;
     this.eyeAltitude = 1;
     this.size = {
         "width": .4,

@@ -118,6 +118,7 @@ Connection.updateState = function() {
         state.sphericalPosition = character.sphericalPosition;
         state.altitude = character.altitude;
         state.groundAltitude = character.groundAltitude;
+        state.velocity = character.velocity;
         state.currentActions = character.currentActions;
         characterStates[i] = state;
     }

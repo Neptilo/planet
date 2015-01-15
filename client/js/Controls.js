@@ -1,6 +1,6 @@
 Controls = {};
 
-Controls.characterActions = ['left', 'forward', 'right', 'back'];
+Controls.characterActions = ['jump', 'left', 'forward', 'right', 'back'];
 
 Controls.cameraActions = ['zoomOut', 'zoomIn'];
 
@@ -29,6 +29,9 @@ Controls.sendActionMessage = function(movement, on) {
 
 Controls.keyToAction = function(key) {
     switch (key) {
+        case 32: // spacebar
+            return 'jump';
+            break;
         case 33: // page up
             return 'zoomOut';
             break;

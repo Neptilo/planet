@@ -49,6 +49,7 @@ Connection.onMessage = function(evt) {
                     character.sphericalPosition = state.sphericalPosition;
                     character.altitude = state.altitude;
                     character.groundAltitude = state.groundAltitude;
+                    character.velocity = state.velocity;
                     character.currentActions = state.currentActions;
                 }
             }

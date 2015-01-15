@@ -132,6 +132,8 @@ Game.moveObject = function(object, deltaTime, planet) {
         // touching the ground: apply actions
         object.velocity[0] = 0;
         var actions = object.currentActions;
+        if (actions['jump'])
+            object.velocity[1] = object.jumpSpeed;
         if (actions['left'])
             object.bearing -= deltaTime*object.angularSpeed;
         if (actions['right'])
