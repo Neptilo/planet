@@ -39,7 +39,7 @@ View.init = function() {
 View.makePlanet = function(planet) {
     var geometry = new THREE.Geometry();
 
-    var segments = 32;
+    var segments = 100;
     var xInds = [[1, 2], [1, 0], [1, 2]];
     var yInds = [[2, 1], [0, 1], [2, 1]];
     var zInds = [[0, 0], [2, 2], [0, 0]];
@@ -53,7 +53,7 @@ View.makePlanet = function(planet) {
                 var u = 2*iVertex/segments-1;
                 for (var jVertex = 0; jVertex <= segments; jVertex++) {
                     var v = 2*jVertex/segments-1;
-                    var altitude = Game.getAltitudeFromUv(iVertex/segments, jVertex/segments, [iSquare, jSquare], planet);
+                    var altitude = Game.getAltitudeFromUv([iVertex/segments, jVertex/segments], [iSquare, jSquare], planet);
                     var fac = (planet.radius+altitude)/Math.sqrt(1+u*u+v*v);
                     var coords = [];
                     coords[0] = fac*u;
@@ -95,6 +95,76 @@ View.makePlanet = function(planet) {
                         new THREE.Vector2((iSquare+iFace/segments)/3, (jSquare+(jFace+1)/segments)/2)];
                 }
             }
+        }
+    }
+
+    geometry.computeFaceNormals();
+    geometry.computeVertexNormals();
+
+    var diffuseTexture = THREE.ImageUtils.loadTexture("img/map.png");
+    var material = new THREE.MeshPhongMaterial({map: diffuseTexture});
+    var model = new THREE.Mesh(geometry, material);
+    model.receiveShadow = true;
+    model.castShadow = true;
+    return model;
+}
+
+View.makeBlock = function(blockId, planet) {
+    var geometry = new THREE.Geometry();
+
+    var segments = 4;
+    var xInds = [[1, 2], [1, 0], [1, 2]];
+    var yInds = [[2, 1], [0, 1], [2, 1]];
+    var zInds = [[0, 0], [2, 2], [0, 0]];
+    var xSigns = [[1, -1], [1, 1], [1, 1]];
+    var ySigns = [[-1, 1], [1, 1], [1, 1]];
+    var zSigns = [[-1, 1], [-1, 1], [1, -1]];
+
+    // for test version only
+    iSquare = 2;
+    jSquare = 1;
+
+    for (var iVertex = 0; iVertex <= segments; iVertex++) {
+        var uSquare = (blockId[0]+iVertex/segments)/planet.blocksPerSide;
+        var u = 2*uSquare-1;
+        for (var jVertex = 0; jVertex <= segments; jVertex++) {
+            var vSquare = (blockId[1]+jVertex/segments)/planet.blocksPerSide;
+            var v = 2*vSquare-1;
+            var altitude = Game.getAltitudeFromUv([uSquare, vSquare], [iSquare, jSquare], planet);
+            var fac = (planet.radius+altitude)/Math.sqrt(1+u*u+v*v);
+            var coords = [];
+            coords[0] = fac*u;
+            coords[1] = fac*v;
+            coords[2] = fac;
+            var x = xSigns[iSquare][jSquare]*coords[xInds[iSquare][jSquare]];
+            var y = ySigns[iSquare][jSquare]*coords[yInds[iSquare][jSquare]];
+            var z = zSigns[iSquare][jSquare]*coords[zInds[iSquare][jSquare]];
+            geometry.vertices.push(new THREE.Vector3(x, y, z));
+        }
+    }
+
+    for (var iFace = 0; iFace < segments; iFace++) {
+        var uTex = (iSquare+(blockId[0]+iFace/segments)/planet.blocksPerSide)/3;
+        var nextUTex = (iSquare+(blockId[0]+(iFace+1)/segments)/planet.blocksPerSide)/3;
+        for (var jFace = 0; jFace < segments; jFace++) {
+            var vTex = (jSquare+(blockId[1]+jFace/segments)/planet.blocksPerSide)/2;
+            var nextVTex = (jSquare+(blockId[1]+(jFace+1)/segments)/planet.blocksPerSide)/2;
+            geometry.faces.push(new THREE.Face3(
+                        (segments+1)*iFace+jFace,
+                        (segments+1)*(iFace+1)+jFace,
+                        (segments+1)*(iFace+1)+jFace+1));
+            geometry.faces.push(new THREE.Face3(
+                        (segments+1)*iFace+jFace,
+                        (segments+1)*(iFace+1)+jFace+1,
+                        (segments+1)*iFace+jFace+1));
+            geometry.faceVertexUvs[0][2*(segments*iFace+jFace)] = [
+                new THREE.Vector2(uTex, vTex),
+                new THREE.Vector2(nextUTex, vTex),
+                new THREE.Vector2(nextUTex, nextVTex)];
+            geometry.faceVertexUvs[0][2*(segments*iFace+jFace)+1] = [
+                new THREE.Vector2(uTex, vTex),
+                new THREE.Vector2(nextUTex, nextVTex),
+                new THREE.Vector2(uTex, nextVTex)];
         }
     }
 

@@ -12,6 +12,11 @@ Scene.makeWorld = function() {
 
     Scene.player = Scene.objects[Connection.clientId];
     Scene.player.model.add(View.pivot);
+
+    // calling getSquareUvFromSphericalPosition because the square uvs have not been computed client-side
+    var sphericalPosition = Scene.player.sphericalPosition;
+    var squareUv = Game.getSquareUvFromSphericalPosition(sphericalPosition.theta, sphericalPosition.phi);
+    Scene.planet.updateTerrain(squareUv.uv, squareUv.square);
     View.pivot.position.y = Scene.player.eyeAltitude-Scene.player.size.height/2;
     View.sun.target = Scene.player.model;
     Game.init();
@@ -21,12 +26,12 @@ Scene.createCharacter = function(characterId, characterData) {
     var character = new Scene.Character(characterData);
     Scene.objects[characterId] = character;
     character.model.rotation.order = 'ZXY';
-    Scene.planet.model.add(character.model);
+    View.scene.add(character.model);
 }
 
 Scene.removeCharacter = function(characterId) {
     var character = Scene.objects[characterId];
-    Scene.planet.model.remove(character.model);
+    View.scene.remove(character.model);
     delete Scene.objects[characterId];
 }
 
@@ -34,19 +39,19 @@ Scene.Planet = function() {
     this.radius = 100;
     this.minAltitude = -2.5;
     this.maxAltitude = 2.5;
+    this.gravity = .0001;
+    this.blocksPerSide = 32; // The number of blocks in a square is the square of this.
+
+    this.blocks = {};
 
     // altitude
     var planet = this;
     var img = new Image;
     img.onload = function() {
         planet.setAltitudeMap(this);
-        planet.model = View.makePlanet(planet);
-        View.scene.add(planet.model);
-        Scene.makeWorld();
+        Scene.makeWorld(); // populate scene with objects and update terrain
     };
     img.src = 'img/altitude.png';
-
-    this.gravity = .0001;
 }
 
 Scene.Planet.prototype.setAltitudeMap = function(img) {
@@ -54,6 +59,34 @@ Scene.Planet.prototype.setAltitudeMap = function(img) {
     this.altitudeMap.width = img.width;
     this.altitudeMap.height = img.height;
     this.altitudeMap.getContext('2d').drawImage(img, 0, 0);
+}
+
+Scene.Planet.prototype.updateTerrain = function(uv, square) {
+    var blockId = Game.getBlockIdFromUv(uv, square, this);
+
+    // unload far away blocks
+    for (var id in this.blocks) {
+        var block = this.blocks[id];
+        var i = Math.floor(id/this.blocksPerSide);
+        var j = id%this.blocksPerSide;
+        if ((Math.abs(i-blockId[0]) > 2) || (Math.abs(j-blockId[1]) > 2)) {
+            View.scene.remove(block);
+            delete this.blocks[id];
+            console.log('delete block '+[i, j]);
+        }
+    }
+
+    // load close blocks
+    for (var i = Math.max(blockId[0]-1, 0); i <= Math.min(blockId[0]+1, this.blocksPerSide-1); i++) {
+        for (var j = Math.max(blockId[1]-1, 0); j <= Math.min(blockId[1]+1, this.blocksPerSide-1); j++) {
+            var id = this.blocksPerSide*i+j;
+            if (this.blocks[id] == undefined) {
+                this.blocks[id] = View.makeBlock([i, j], this);
+                View.scene.add(this.blocks[id]);
+                console.log('create block '+[i, j]);
+            }
+        }
+    }
 }
 
 Scene.Character = function(data) {
