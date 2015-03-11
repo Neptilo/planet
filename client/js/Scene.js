@@ -52,6 +52,10 @@ Scene.Planet = function() {
         Scene.makeWorld(); // populate scene with objects and update terrain
     };
     img.src = 'img/altitude.png';
+
+    // view: material
+    var diffuseTexture = THREE.ImageUtils.loadTexture("img/map.png");
+    this.material = new THREE.MeshPhongMaterial({map: diffuseTexture});
 }
 
 Scene.Planet.prototype.setAltitudeMap = function(img) {
