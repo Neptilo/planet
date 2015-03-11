@@ -171,9 +171,7 @@ View.makeBlock = function(blockId, planet) {
     geometry.computeFaceNormals();
     geometry.computeVertexNormals();
 
-    var diffuseTexture = THREE.ImageUtils.loadTexture("img/map.png");
-    var material = new THREE.MeshPhongMaterial({map: diffuseTexture});
-    var model = new THREE.Mesh(geometry, material);
+    var model = new THREE.Mesh(geometry, planet.material);
     model.receiveShadow = true;
     model.castShadow = true;
     return model;
