@@ -112,7 +112,7 @@ View.makePlanet = function(planet) {
 View.makeBlock = function(blockId, planet) {
     var geometry = new THREE.Geometry();
 
-    var segments = 4;
+    var segments = 16;
     var xInds = [[1, 2], [1, 0], [1, 2]];
     var yInds = [[2, 1], [0, 1], [2, 1]];
     var zInds = [[0, 0], [2, 2], [0, 0]];

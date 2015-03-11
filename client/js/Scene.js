@@ -59,10 +59,15 @@ Scene.Planet = function() {
 }
 
 Scene.Planet.prototype.setAltitudeMap = function(img) {
-    this.altitudeMap = document.createElement('canvas');
+    var canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    var ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    this.altitudeMap = {};
     this.altitudeMap.width = img.width;
     this.altitudeMap.height = img.height;
-    this.altitudeMap.getContext('2d').drawImage(img, 0, 0);
+    this.altitudeMap.data = ctx.getImageData(0, 0, img.width, img.height).data;
 }
 
 Scene.Planet.prototype.updateTerrain = function(uv, square) {
