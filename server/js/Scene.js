@@ -14,16 +14,26 @@ Scene.Planet = function() {
     this.maxAltitude = 2.5;
 
     // altitude
+    var planet = this;
     fs.readFile(__dirname + '/../img/altitude.png', function(err, data) {
         if (err) throw err;
         var img = new Canvas.Image;
         img.src = data;
-        Scene.planet.altitudeMap = new Canvas(img.width, img.height);
-        Scene.planet.altitudeMap.getContext('2d').drawImage(img, 0, 0);
+        planet.setAltitudeMap(img);
         console.info('Altitude map loaded');
     });
 
     this.gravity = .0001;
+}
+
+Scene.Planet.prototype.setAltitudeMap = function(img) {
+    var canvas = new Canvas(img.width, img.height);
+    var ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    this.altitudeMap = {};
+    this.altitudeMap.width = img.width;
+    this.altitudeMap.height = img.height;
+    this.altitudeMap.data = ctx.getImageData(0, 0, img.width, img.height).data;
 }
 
 Scene.Character = function(data) {
