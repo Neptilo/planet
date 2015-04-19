@@ -15,7 +15,7 @@ Scene.makeWorld = function() {
 
     // calling getSquareUvFromSphericalPosition because the square uvs have not been computed client-side
     var sphericalPosition = Scene.player.sphericalPosition;
-    var squareUv = Game.getSquareUvFromSphericalPosition(sphericalPosition.theta, sphericalPosition.phi);
+    var squareUv = Game.getSquareUvFromSphericalPosition(sphericalPosition.theta, sphericalPosition.phi, Scene.planet);
     Scene.planet.updateTerrain(squareUv.uv, squareUv.square);
     View.pivot.position.y = Scene.player.eyeAltitude-Scene.player.size.height/2;
     View.sun.target = Scene.player.model;
@@ -41,6 +41,19 @@ Scene.Planet = function() {
     this.maxAltitude = 2.5;
     this.gravity = .0001;
     this.blocksPerSide = 32; // The number of blocks in a square is the square of this.
+    this.coordInds = [
+        [[1, 2], [1, 0], [1, 2]],
+        [[2, 1], [0, 1], [2, 1]],
+        [[0, 0], [2, 2], [0, 0]]];
+    this.coordSigns = [
+        [[1, -1], [1, 1], [1, 1]],
+        [[-1, 1], [1, 1], [1, 1]],
+        [[-1, 1], [-1, 1], [1, -1]]];
+    this.squareInds = [
+        [[0, 1], [2, 1]],
+        [[0, 0], [2, 0]],
+        [[1, 0], [1, 1]]];
+    this.uSigns = [[-1, 1], [1, 1], [1, -1]];
 
     this.blocks = {};
 
@@ -71,31 +84,136 @@ Scene.Planet.prototype.setAltitudeMap = function(img) {
 }
 
 Scene.Planet.prototype.updateTerrain = function(uv, square) {
-    var blockId = Game.getBlockIdFromUv(uv, square, this);
+    var blockInd = Game.getBlockIndFromUv(uv, this);
 
     // unload far away blocks
+    var blockUnloadDistance = 3;
     for (var id in this.blocks) {
         var block = this.blocks[id];
-        var i = Math.floor(id/this.blocksPerSide);
         var j = id%this.blocksPerSide;
-        if ((Math.abs(i-blockId[0]) > 2) || (Math.abs(j-blockId[1]) > 2)) {
+        var tmp = (id-j)/this.blocksPerSide;
+        var i = tmp%this.blocksPerSide;
+        tmp = (tmp-i)/this.blocksPerSide;
+        var jSquare = tmp%2;
+        var iSquare = (tmp-jSquare)/2;
+        var d = this.blockDistance(blockInd, square, [i, j], [iSquare, jSquare]);
+        if (d > blockUnloadDistance) {
             View.scene.remove(block);
             delete this.blocks[id];
-            console.log('delete block '+[i, j]);
         }
     }
 
     // load close blocks
-    for (var i = Math.max(blockId[0]-1, 0); i <= Math.min(blockId[0]+1, this.blocksPerSide-1); i++) {
-        for (var j = Math.max(blockId[1]-1, 0); j <= Math.min(blockId[1]+1, this.blocksPerSide-1); j++) {
-            var id = this.blocksPerSide*i+j;
-            if (this.blocks[id] == undefined) {
-                this.blocks[id] = View.makeBlock([i, j], this);
-                View.scene.add(this.blocks[id]);
-                console.log('create block '+[i, j]);
+    var blockLoadDistance = 2;
+    for (var i = -blockLoadDistance; i <= blockLoadDistance; i++) {
+        for (var j = -blockLoadDistance; j <= blockLoadDistance; j++) {
+            var indSquare = this.blockAdd(blockInd, square, [i, j]);
+            if (indSquare != null) {
+                var ind = indSquare[0];
+                var sqr = indSquare[1];
+                var id = this.getBlockIdFromInd(ind, sqr);
+                if (this.blocks[id] == undefined) {
+                    this.blocks[id] = View.makeBlock(sqr, ind, this);
+                    View.scene.add(this.blocks[id]);
+                }
             }
         }
     }
+}
+
+// returns the distance in terms of blocks between two blocks
+Scene.Planet.prototype.blockDistance = function(ind0, square0, ind1, square1) {
+    if (square0[0] == square1[0] && square0[1] == square1[1])
+        return Math.max(Math.abs(ind1[0]-ind0[0]), Math.abs(ind1[1]-ind0[1]));
+    else {
+        var coords = [];
+        coords[0] = ind0[0]-this.blocksPerSide/2+0.5;
+        coords[1] = ind0[1]-this.blocksPerSide/2+0.5;
+        coords[2] = this.blocksPerSide/2;
+        var A = this.getUnorientedCoordinates(coords, square0);
+        coords[0] = ind1[0]-this.blocksPerSide/2+0.5;
+        coords[1] = ind1[1]-this.blocksPerSide/2+0.5;
+        var B = this.getUnorientedCoordinates(coords, square1);
+        return Math.max(Math.max(
+            Math.abs(B[0]-A[0]),
+            Math.abs(B[1]-A[1])),
+            Math.abs(B[2]-A[2]));
+    }
+}
+
+// t is a translation vector in terms of block indices
+// t must be less than blocksPerSide
+Scene.Planet.prototype.blockAdd = function(ind, square, t) {
+    var i = ind[0]+t[0];
+    var j = ind[1]+t[1];
+    var coordsOutBounds = 0;
+    var sideInd; // index of the result on a side square
+    if (i < 0) {
+        sideInd = [-1, j, this.blocksPerSide+i]
+        coordsOutBounds++;
+    } else if (i >= this.blocksPerSide) {
+        sideInd = [this.blocksPerSide, j, 2*this.blocksPerSide-i-1];
+        coordsOutBounds++;
+    }
+    if (j < 0) {
+        sideInd = [i, -1, this.blocksPerSide+j]
+        coordsOutBounds++;
+    } else if (j >= this.blocksPerSide) {
+        sideInd = [i, this.blocksPerSide, 2*this.blocksPerSide-j-1];
+        coordsOutBounds++;
+    }
+    if (!coordsOutBounds)
+        return [[i, j], square];
+    else if (coordsOutBounds > 1)
+        return null; // such a block doesn't exist
+    else {
+        // convert sideInd into absolute coordinates
+        for (iCoord = 0; iCoord < 3; iCoord++)
+            sideInd[iCoord] -= (this.blocksPerSide-1)/2;
+        var coords = this.getUnorientedCoordinates(sideInd, square);
+
+        // find square
+        // find biggest coordinate
+        var wInd = 0;
+        var w = 0;
+        for (var i = 0; i < 3; i++) {
+            if (Math.abs(coords[i]) > Math.abs(w)) {
+                w = coords[i];
+                wInd = i;
+            }
+        }
+        var resSquare = this.squareInds[wInd][Number(w >= 0)];
+
+        // convert coords into resSquare coordinate system
+        var blockInd = this.getOrientedCoordinates(coords, resSquare);
+        for (iCoord = 0; iCoord < 3; iCoord++)
+            blockInd[iCoord] += (this.blocksPerSide-1)/2;
+
+        return [[blockInd[0], blockInd[1]], resSquare];
+    }    
+}
+
+Scene.Planet.prototype.getBlockIdFromInd = function(ind, square) {
+    var squareId = square[0]*2+square[1];
+    return (squareId*this.blocksPerSide+ind[0])*this.blocksPerSide+ind[1];
+}
+
+Scene.Planet.prototype.getUnorientedCoordinates = function(coords, square) {
+    var res = [];
+    var i = square[0];
+    var j = square[1];
+    for (var k = 0; k < 3; k++)
+        res[k] = this.coordSigns[k][i][j]*coords[this.coordInds[k][i][j]];
+    return res;
+}
+
+Scene.Planet.prototype.getOrientedCoordinates = function(coords, square) {
+    var res = [];
+    var i = square[0];
+    var j = square[1];
+    for (var k = 0; k < 3; k++)
+        res[this.coordInds[k][i][j]] = this.coordSigns[k][i][j]*coords[k];
+    return res;
 }
 
 Scene.Character = function(data) {

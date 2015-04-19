@@ -52,16 +52,11 @@ Game.getAltitudeFromUv = function(uvSquare, square, planet) {
     return planet.minAltitude+(planet.maxAltitude-planet.minAltitude)*altitudePix/255;
 }
 
-Game.getSquareUvFromSphericalPosition = function(theta, phi) {
+Game.getSquareUvFromSphericalPosition = function(theta, phi, planet) {
     var newCoords = []; // normalized coordinates
     newCoords[0] = Math.sin(theta)*Math.sin(phi);
     newCoords[1] = -Math.sin(theta)*Math.cos(phi);
     newCoords[2] = Math.cos(theta);
-    var squareInds = [
-        [[0, 1], [2, 1]],
-        [[0, 0], [2, 0]],
-        [[1, 0], [1, 1]]];
-    var uSigns = [[-1, 1], [1, 1], [1, -1]];
     // find biggest coordinate
     var wInd = 0;
     var w = 0;
@@ -71,11 +66,11 @@ Game.getSquareUvFromSphericalPosition = function(theta, phi) {
             wInd = i;
         }
     }
-    var square = squareInds[wInd][Number(w >= 0)];
+    var square = planet.squareInds[wInd][Number(w >= 0)];
     var vInd = square[1]; // magic trick
     var v = newCoords[vInd]/Math.abs(w);
     var uInd = 3-wInd-vInd; // the remaining coordinate
-    var u = uSigns[square[0]][square[1]]*newCoords[uInd]/Math.abs(w);
+    var u = planet.uSigns[square[0]][square[1]]*newCoords[uInd]/Math.abs(w);
     return {
         'uv': [(u+1)/2, (v+1)/2],
         'square': square
@@ -84,7 +79,7 @@ Game.getSquareUvFromSphericalPosition = function(theta, phi) {
 
 // better not call this and call getAltitudeFromUv directly if squareUv is available
 Game.getAltitudeFromSphericalPosition = function(theta, phi, planet) {
-    var squareUv = Game.getSquareUvFromSphericalPosition(theta, phi);
+    var squareUv = Game.getSquareUvFromSphericalPosition(theta, phi, planet);
     return Game.getAltitudeFromUv(squareUv.uv, squareUv.square, planet);
 }
 
@@ -118,14 +113,14 @@ Game.getNewSphericalPostion = function(sphericalPosition, bearing, distance) {
     }
 }
 
-Game.getBlockIdFromUv = function(uv, square, planet) {
+Game.getBlockIndFromUv = function(uv, planet) {
     return [Math.floor(uv[0]*planet.blocksPerSide), Math.floor(uv[1]*planet.blocksPerSide)];
 }
 
-// better not call this and call getBlockIdFromUv directly if squareUv is available
-Game.getBlockIdFromSphericalPosition = function(theta, phi, planet) {
-    var squareUv = Game.getSquareUvFromSphericalPosition(theta, phi);
-    return Game.getBlockIdFromUv(squareUv.uv, squareUv.square, planet)
+// better not call this and call getBlockIndFromUv directly if squareUv is available
+Game.getBlockIndFromSphericalPosition = function(theta, phi, planet) {
+    var squareUv = Game.getSquareUvFromSphericalPosition(theta, phi, planet);
+    return Game.getBlockIndFromUv(squareUv.uv, planet)
 }
 
 Game.moveObjects = function(deltaTime, planet) {
@@ -172,7 +167,7 @@ Game.moveObject = function(object, deltaTime, planet) {
         var newTheta = newSphericalPosition.theta;
         var newPhi = newSphericalPosition.phi;
         var newBearing = newSphericalPosition.bearing;
-        var newSquareUv = Game.getSquareUvFromSphericalPosition(newTheta, newPhi);
+        var newSquareUv = Game.getSquareUvFromSphericalPosition(newTheta, newPhi, planet);
         var uv = newSquareUv.uv;
         var square = newSquareUv.square;
         var newGroundAltitude = Game.getAltitudeFromUv(uv, square, planet);
