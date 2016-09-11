@@ -140,5 +140,6 @@ Game.moveObject = function(object, deltaTime, planet) {
     newAltitude = Math.max(object.altitude+vd, object.groundAltitude);
     object.velocity[1] = (newAltitude-object.altitude)/deltaTime;
     object.altitude = newAltitude;
-    console.assert(object.altitude >= object.groundAltitude);
+    if (object.altitude < object.groundAltitude)
+        console.error('Object lower than ground');
 }
