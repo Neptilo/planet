@@ -128,8 +128,13 @@ Connection.updateState = function() {
         'characterStates': characterStates
     }
 
+    var readyStates = ['connecting', 'open', 'closing', 'closed'];
     for (var i in Connection.activeConnections) {
         var client = Connection.activeConnections[i];
-        client.send(JSON.stringify(message));
+        try {
+            client.send(JSON.stringify(message));
+        } catch (error) {
+            console.error('Client #%s %s', i, readyStates[client.readyState]);
+        }
     }
 }
