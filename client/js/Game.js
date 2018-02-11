@@ -176,7 +176,8 @@ Game.moveObject = function(object, deltaTime, planet) {
             object.sphericalPosition.phi = newPhi;
             object.bearing = newBearing;
             object.groundAltitude = newGroundAltitude;
-            planet.updateTerrain(uv, square);
+            if (Scene.player === object)
+                planet.updateTerrain(uv, square);
         } else {
             object.velocity[0] = 0;
         }
