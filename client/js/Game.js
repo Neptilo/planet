@@ -48,7 +48,7 @@ Game.getAltitudeFromUv = function(uvSquare, square, planet) {
     var xTex = Math.round((planet.altitudeMap.width-1)*(square[0]+uvSquare[0])/3);
     var yTex = Math.round((planet.altitudeMap.height/2-1)*(1-uvSquare[1]));
     if (square[1] == 0) yTex += planet.altitudeMap.height/2;
-    var altitudePix = planet.altitudeMap.data[4*(planet.altitudeMap.width*yTex+xTex)];
+    var altitudePix = planet.altitudeMap.data[planet.altitudeMap.width*yTex+xTex];
     return planet.minAltitude+(planet.maxAltitude-planet.minAltitude)*altitudePix/255;
 }
 

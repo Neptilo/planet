@@ -80,7 +80,13 @@ Scene.Planet.prototype.setAltitudeMap = function(img) {
     this.altitudeMap = {};
     this.altitudeMap.width = img.width;
     this.altitudeMap.height = img.height;
-    this.altitudeMap.data = ctx.getImageData(0, 0, img.width, img.height).data;
+
+    // copy only red channel of img into altitudeMap
+    var imgData = ctx.getImageData(0, 0, img.width, img.height).data;
+    this.altitudeMap.data = [];
+    for (var i = 0; i < imgData.length/4; i++) {
+        this.altitudeMap.data[i] = imgData[4*i];
+    }
 }
 
 Scene.Planet.prototype.updateTerrain = function(uv, square) {
