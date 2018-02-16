@@ -67,7 +67,7 @@ Scene.Planet = function() {
     img.src = 'img/altitude.png';
 
     // view: material
-    var diffuseTexture = THREE.ImageUtils.loadTexture("img/map.png");
+    var diffuseTexture = new THREE.TextureLoader().load("img/map.png");
     this.material = new THREE.MeshPhongMaterial({map: diffuseTexture});
 }
 

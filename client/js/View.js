@@ -8,8 +8,8 @@ View.init = function() {
     View.camera = new View.PlayerCamera();
 
     View.renderer = new THREE.WebGLRenderer();
-    View.renderer.shadowMapEnabled = true;
-    View.renderer.shadowMapType = THREE.PCFSoftShadowMap;
+    View.renderer.shadowMap.enabled = true;
+    View.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     View.renderer.setSize(
             View.resolution*window.innerWidth,
             View.resolution*window.innerHeight);
@@ -24,12 +24,12 @@ View.init = function() {
 
     // lighting
     View.sun = new THREE.DirectionalLight(0xffffff, 1);
-    View.sun.shadowCameraNear = .1;
+    View.sun.shadow.camera.near = .1;
     View.sun.castShadow = true;
-    View.sun.shadowCameraLeft = -16;
-    View.sun.shadowCameraRight = 16;
-    View.sun.shadowCameraTop = 16;
-    View.sun.shadowCameraBottom = -16;
+    View.sun.shadow.camera.left = -16;
+    View.sun.shadow.camera.right = 16;
+    View.sun.shadow.camera.top = 16;
+    View.sun.shadow.camera.bottom = -16;
     View.scene.add(View.sun);
 
     View.ambient = new THREE.AmbientLight(0x000420);
@@ -100,7 +100,7 @@ View.makeCharacter = function(width, height) {
     geometry.faceVertexUvs[0] = [];
     geometry.faceVertexUvs[0].push([uvs[2], uvs[1], uvs[3]]);
     geometry.faceVertexUvs[0].push([uvs[1], uvs[0], uvs[3]]);
-    var texture = THREE.ImageUtils.loadTexture("img/man.png");
+    var texture = new THREE.TextureLoader().load("img/man.png");
     var material = new THREE.MeshPhongMaterial({map: texture});
     material.alphaTest = .9;
     material.side = THREE.DoubleSide;
