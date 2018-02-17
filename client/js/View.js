@@ -10,9 +10,14 @@ View.init = function() {
     View.renderer = new THREE.WebGLRenderer();
     View.renderer.shadowMap.enabled = true;
     View.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    View.renderer.setSize(
+    window.onresize = function(event) {
+        View.renderer.setSize(
             View.resolution*window.innerWidth,
             View.resolution*window.innerHeight);
+        View.camera.aspect = window.innerWidth/window.innerHeight;
+        View.camera.updateProjectionMatrix();
+    };
+    window.onresize();
     View.renderer.setClearColor(0x7EC0EE, 1);
     View.canvas = View.renderer.domElement;
     View.canvas.style.display = 'block';
