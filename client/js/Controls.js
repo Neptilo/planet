@@ -18,37 +18,41 @@ Controls.init = function() {
     }
 }
     
-Controls.sendActionMessage = function(movement, on) {
+Controls.sendActionMessage = function(action, on) {
     var message = {
         'action': 'setAction',
-        'which': movement,
+        'which': action,
         'value': on
     };
     Connection.send(JSON.stringify(message));
 }
 
 Controls.keyToAction = function(key) {
+    // these are KeyboardEvent.key keywords
     switch (key) {
-        case 32: // spacebar
+        case ' ':
             return 'jump';
             break;
-        case 33: // page up
+        case 'PageUp':
             return 'zoomOut';
             break;
-        case 34: // page down
+        case 'PageDown':
             return 'zoomIn';
             break;
-        case 37: // left arrow
+        case 'ArrowLeft':
             return 'left';
             break;
-        case 38: // up arrow
+        case 'ArrowUp':
             return 'forward';
             break;
-        case 39: // right arrow
+        case 'ArrowRight':
             return 'right';
             break;
-        case 40: // down arrow
+        case 'ArrowDown':
             return 'back';
+            break;
+        case 'Enter':
+            return 'talk';
             break;
         default:
             return false;
@@ -56,7 +60,12 @@ Controls.keyToAction = function(key) {
 }
 
 Controls.switchAction = function(event, on) {
-    var action = Controls.keyToAction(event.keyCode);
+    // check if we are editing the text box
+    var input = document.getElementsByTagName('input')[0];
+    if (input == document.activeElement && event.key != 'Enter')
+        return;
+
+    var action = Controls.keyToAction(event.key);
     if (action) {
         for (var i in Controls.characterActions) {
             if (action == Controls.characterActions[i]) {
@@ -71,6 +80,20 @@ Controls.switchAction = function(event, on) {
                 View.camera.currentActions[action] = on;
                 break;
             }
+        }
+        if (action == 'talk' && on) {
+            input.hidden = !input.hidden; // open or close message box
+            input.focus();
+            if (input.hidden) {
+                input.oninput = null;
+            } else {
+                // clear text
+                input.value = ''; // in the text bar
+                Controls.sendActionMessage('talk', ''); // on the server
+
+                input.oninput = Controls.handleTextInput;
+            }
+            input.onpropertychange = input.oninput; // for IE8
         }
     }
 }
@@ -90,4 +113,9 @@ Controls.handleMouseWheel = function(e) {
         View.camera.zoomIn();
     else
         View.camera.zoomOut();
+}
+
+Controls.handleTextInput = function(event) {
+    var input = document.getElementsByTagName('input')[0];
+    Controls.sendActionMessage('talk', input.value);
 }

@@ -240,7 +240,23 @@ Scene.Character = function(data) {
     this.groundAltitude = this.altitude;
     this.velocity = [0, 0];
     this.currentActions = {};
+    this.balloonText = '';
 
     // view
     this.model = View.makeCharacter(this.size.width, this.size.height);
+}
+
+Scene.Character.prototype.updateBalloon = function(text) {
+    if (text != this.balloonText) {
+        this.balloonText = text;
+        if (this.balloonModel)
+            this.model.remove(this.balloonModel);
+        if (text) {
+            this.balloonModel = View.makeBalloon(text);
+            this.balloonModel.rotation.order = 'YXZ';
+            this.model.add(this.balloonModel);
+        } else {
+            this.balloonModel = null;
+        }
+    }
 }

@@ -18,6 +18,9 @@ Game.tick = function() {
     Game.lastTime = timeNow;
 
     // update scene
+
+    View.pivot.rotation.x = View.camera.elevation-Math.PI/2;
+
     for (var i in Scene.objects) {
         var character = Scene.objects[i];
         // +.5 for each coordinate because of the way of constructing the planet
@@ -28,13 +31,26 @@ Game.tick = function() {
         character.model.rotation.z = character.sphericalPosition.phi;
         character.model.rotation.x = character.sphericalPosition.theta+Math.PI/2; // because of the way the plane is created
         character.model.rotation.y = -character.bearing;
+
+        character.updateBalloon(character.currentActions['talk']);
+        if (character.balloonModel) {
+            character.balloonModel.rotation.y =
+                Scene.player.model.rotation.y-character.model.rotation.y;
+            character.balloonModel.rotation.x = View.pivot.rotation.x;
+            var balloonScale = character.balloonModel.scale;
+
+            // calculate distance between character and player
+            var d = character.model.position.distanceTo(Scene.player.model.position);
+
+            balloonScale.x = balloonScale.y = balloonScale.z =
+                0.02*(View.camera.distance+d);
+            character.balloonModel.position.y = 0.5+0.02*View.camera.distance;
+        }
     }
 
     View.sun.position.x = Scene.player.model.position.x+4;
     View.sun.position.y = Scene.player.model.position.y;
     View.sun.position.z = Scene.player.model.position.z;
-
-    View.pivot.rotation.x = View.camera.elevation-Math.PI/2;
 
     View.camera.applyActions();
     View.camera.position.z = View.camera.distance;

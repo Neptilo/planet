@@ -119,10 +119,72 @@ View.makeCharacter = function(width, height) {
     return model;
 }
 
+View.makeBalloon = function(text) {
+    // constants
+    var balloonHeight = 3; // in world units
+    var minBalloonWidth = 4;
+    var fontSize = 50; // in px, when drawing on the texture
+    
+    // prepare texture with text
+    // the full height of the texture is used, but not the full width
+    var canvas = document.createElement('canvas');
+    canvas.width = 1024; // texture dimensions must be powers of two
+    canvas.height = 128;
+    var ctx = canvas.getContext('2d');
+    var margin = canvas.height-2*fontSize;
+    ctx.font = String(fontSize)+'px sans-serif';
+    var textWidth = ctx.measureText(text).width;
+    ctx.fillStyle = 'white';
+    var usedTextureWidth = Math.min(canvas.width,
+        Math.max(textWidth+2*margin, canvas.height*minBalloonWidth/balloonHeight));
+    ctx.fillRect(0, 0, usedTextureWidth, canvas.height);
+    ctx.fillStyle = 'black';
+    ctx.fillText(text, (usedTextureWidth-textWidth)/2, margin+fontSize);
+    var texture = new THREE.Texture(canvas);
+    texture.needsUpdate = true;
+
+    // build geometry
+    var geometry = new THREE.BufferGeometry();
+    var balloonWidth = balloonHeight*usedTextureWidth/canvas.height;
+    var vertices = new Float32Array([
+        // tail of the balloon
+        0, 0, 0,
+        1, 1, 0,
+        0, 1, 0,
+        // upper-right triangle
+        balloonWidth/2, 1, 0,
+        balloonWidth/2, balloonHeight+1, 0,
+        -balloonWidth/2, balloonHeight+1, 0,
+        // lower-left triangle
+        -balloonWidth/2, balloonHeight+1, 0,
+        -balloonWidth/2, 1, 0,
+        balloonWidth/2, 1, 0
+    ]);
+    var uMax = usedTextureWidth/canvas.width;
+    var textureCoordinates = new Float32Array([
+        // for the tail of the balloon, take color from margin where there is no text
+        0, 0,     margin/canvas.width, 1,  0, 1,
+        uMax, 0,  uMax, 1,                 0, 1,
+        0, 1,     0, 0,                    uMax, 0
+    ]);
+    geometry.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
+    geometry.addAttribute('uv', new THREE.BufferAttribute(textureCoordinates, 2));
+
+    // build material
+    var material = new THREE.MeshBasicMaterial({
+        map: texture,
+        transparent: true,
+        opacity: 0.75
+    });
+    var mesh = new THREE.Mesh(geometry, material);
+
+    return mesh;
+}
+
 View.PlayerCamera = function() {
     THREE.PerspectiveCamera.call(this, 45, window.innerWidth/window.innerHeight, .1, 100);
     this.distance = 4;
-    this.elevation = Math.PI/2.5;
+    this.elevation = Math.PI*0.4;
     this.currentActions = {};
 }
 
