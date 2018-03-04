@@ -83,10 +83,12 @@ Controls.switchAction = function(event, on) {
         }
         if (action == 'talk' && on) {
             input.hidden = !input.hidden; // open or close message box
-            input.focus();
             if (input.hidden) {
+                input.blur();
                 input.oninput = null;
             } else {
+                input.focus();
+
                 // clear text
                 input.value = ''; // in the text bar
                 Controls.sendActionMessage('talk', ''); // on the server
