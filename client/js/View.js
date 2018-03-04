@@ -1,6 +1,7 @@
 View = {}
 
 View.resolution = 1;
+View.balloonAlphaMax = 0.75;
 
 View.init = function() {
     View.scene = new THREE.Scene();
@@ -174,7 +175,7 @@ View.makeBalloon = function(text) {
     var material = new THREE.MeshBasicMaterial({
         map: texture,
         transparent: true,
-        opacity: 0.75
+        opacity: View.balloonAlphaMax
     });
     var mesh = new THREE.Mesh(geometry, material);
 
@@ -183,12 +184,14 @@ View.makeBalloon = function(text) {
 
 View.PlayerCamera = function() {
     THREE.PerspectiveCamera.call(this, 45, window.innerWidth/window.innerHeight, .1, 100);
-    this.distance = 4;
+    this.distance = View.PlayerCamera.defaultDistance;
     this.elevation = Math.PI*0.4;
     this.currentActions = {};
 }
 
 View.PlayerCamera.prototype = new THREE.PerspectiveCamera();
+
+View.PlayerCamera.defaultDistance = 4;
 
 View.PlayerCamera.prototype.zoomIn = function() {
     this.distance *= .9;

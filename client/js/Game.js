@@ -37,14 +37,29 @@ Game.tick = function() {
             character.balloonModel.rotation.y =
                 Scene.player.model.rotation.y-character.model.rotation.y;
             character.balloonModel.rotation.x = View.pivot.rotation.x;
-            var balloonScale = character.balloonModel.scale;
 
             // calculate distance between character and player
-            var d = character.model.position.distanceTo(Scene.player.model.position);
+            var charDist =
+                character.model.position.distanceTo(Scene.player.model.position);
 
-            balloonScale.x = balloonScale.y = balloonScale.z =
-                0.02*(View.camera.distance+d);
-            character.balloonModel.position.y = 0.5+0.02*View.camera.distance;
+            // distance value for which the maximum alpha is reached
+            var dDef = View.PlayerCamera.defaultDistance;
+            var dNear = 1; // minimum distance for which a balloon is still visible
+            var dFar = 12; // maximum distance for which a balloon is still visible
+            var d = charDist+View.camera.distance;
+
+            // This formula yields an opacity of balloonAlphaMax when d == dDef,
+            // and a null opacity when d == dNear or dFar
+            // So balloons are more transparent when too close or too far from camera
+            var dLim;
+            if (d <= dDef) {
+                dLim = dNear;
+            } else {
+                dLim = dFar;
+            }
+            var deltaRatio = (d-dDef)/(dLim-dDef);
+            character.balloonModel.material.opacity =
+                View.balloonAlphaMax*(1-deltaRatio*deltaRatio);
         }
     }
 
