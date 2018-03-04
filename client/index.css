@@ -1,3 +1,7 @@
+body {
+    overflow: hidden;
+}
+
 input {
     position: absolute;
     bottom: 0px;
@@ -5,4 +9,7 @@ input {
     height: 32px;
     font-size: large;
     opacity: 0.75;
+    border-radius: 0px;
+    padding: 0px;
+    border-width: 2px;
 }
