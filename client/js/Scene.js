@@ -249,16 +249,11 @@ Scene.Character = function(data) {
 Scene.Character.prototype.updateBalloon = function(text) {
     if (text != this.balloonText) {
         this.balloonText = text;
-        if (this.balloonModel)
-            this.model.remove(this.balloonModel);
         if (text) {
-            this.balloonModel = View.makeBalloon(text);
-            this.balloonModel.rotation.order = 'YXZ';
-            var balloonScale = this.balloonModel.scale;
-            balloonScale.x = balloonScale.y = balloonScale.z = 0.12;
-            this.balloonModel.position.y = 0.5+0.3*balloonScale.x;
-            this.model.add(this.balloonModel);
+            View.makeBalloon(text, this);
         } else {
+            if (this.balloonModel)
+                this.model.remove(this.balloonModel);
             this.balloonModel = null;
         }
     }

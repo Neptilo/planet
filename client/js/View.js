@@ -120,33 +120,91 @@ View.makeCharacter = function(width, height) {
     return model;
 }
 
-View.makeBalloon = function(text) {
+View.makeBalloon = function(text, character) {
     // constants
-    var balloonHeight = 3; // in world units
-    var minBalloonWidth = 4;
+    var defAspectRatio = 4/3;
     var fontSize = 50; // in px, when drawing on the texture
-    
-    // prepare texture with text
-    // the full height of the texture is used, but not the full width
-    var canvas = document.createElement('canvas');
-    canvas.width = 1024; // texture dimensions must be powers of two
-    canvas.height = 128;
-    var ctx = canvas.getContext('2d');
-    var margin = canvas.height-2*fontSize;
-    ctx.font = String(fontSize)+'px sans-serif';
-    var textWidth = ctx.measureText(text).width;
+    var margin = 30;
+    var textureWidth = 1024; // texture dimensions must be powers of two
+    var textureHeight = 512;
+
+    // image where we will render the text
+    var img = new Image();
+    img.customData = {};
+
+    // prepare HTML paragraph with multiline text
+    var paragraph = document.createElement('p');
+    paragraph.style.width = String(textureWidth-2*margin)+'px';
+    paragraph.style.font = String(fontSize)+'px sans-serif';
+    paragraph.style.margin = String(margin)+'px';
+    paragraph.style.textAlign = 'center';
+    paragraph.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+
+    // wrap the text inside a span to be able to measure its real size
+    var span = document.createElement('span');
+    paragraph.appendChild(span);
+    span.innerText = text;
+
+    // render it to compute its dimensions
+    document.body.appendChild(paragraph);
+
+    // in general, the used width and height are less than the total texture size
+    img.customData.usedTextureHeight =
+        Math.min(textureHeight, span.offsetHeight+2*margin);
+    img.customData.usedTextureWidth =
+        Math.min(
+            textureWidth,
+            Math.max(
+                span.offsetWidth+2*margin,
+                img.customData.usedTextureHeight*defAspectRatio));
+    img.customData.margin = margin;
+
+    // we're done using span's dimensions
+    document.body.removeChild(paragraph);
+
+    // draw the HTML paragraph on a canvas
+    img.customData.canvas = document.createElement('canvas');
+    img.customData.canvas.width = textureWidth;
+    img.customData.canvas.height = textureHeight;
+    img.customData.character = character;
+
+    var data =
+        '<svg xmlns="http://www.w3.org/2000/svg" '+
+        'width="'+textureWidth+'" '+
+        'height="'+textureHeight+'">'+
+        '<foreignObject width="100%" height="100%">'+
+        paragraph.outerHTML+
+        '</foreignObject>'+
+        '</svg>';
+            
+    img.onload = View.onBalloonImgLoad;
+    img.src = "data:image/svg+xml," + encodeURIComponent(data);
+}
+
+View.onBalloonImgLoad = function() {
+    var data = this.customData;
+    var ctx = data.canvas.getContext('2d');
+    var textureWidth = data.canvas.width;
+    var textureHeight = data.canvas.height;
+
+    // fill texture background with an extra margin everywhere possible
+    // to avoid visible borders
     ctx.fillStyle = 'white';
-    var usedTextureWidth = Math.min(canvas.width,
-        Math.max(textWidth+2*margin, canvas.height*minBalloonWidth/balloonHeight));
-    ctx.fillRect(0, 0, usedTextureWidth, canvas.height);
-    ctx.fillStyle = 'black';
-    ctx.fillText(text, (usedTextureWidth-textWidth)/2, margin+fontSize);
-    var texture = new THREE.Texture(canvas);
+    ctx.fillRect(
+        0.5*(textureWidth-data.usedTextureWidth)-data.margin,
+        0, // can't add a top margin
+        data.usedTextureWidth+2*data.margin,
+        data.usedTextureHeight+data.margin);
+
+    ctx.drawImage(this, 0, 0);
+    
+    var texture = new THREE.Texture(data.canvas);
     texture.needsUpdate = true;
 
     // build geometry
     var geometry = new THREE.BufferGeometry();
-    var balloonWidth = balloonHeight*usedTextureWidth/canvas.height;
+    var balloonWidth = 0.023*data.usedTextureWidth;
+    var balloonHeight = 0.023*data.usedTextureHeight;
     var vertices = new Float32Array([
         // tail of the balloon
         0, 0, 0,
@@ -161,12 +219,18 @@ View.makeBalloon = function(text) {
         -balloonWidth/2, 1, 0,
         balloonWidth/2, 1, 0
     ]);
-    var uMax = usedTextureWidth/canvas.width;
+    var uWidth = data.usedTextureWidth/textureWidth;
+    var vHeight = data.usedTextureHeight/textureHeight;
+    var uMin = 0.5*(1-uWidth);
+    var uMax = 0.5*(1+uWidth);
+    var uMarginWidth = data.margin/textureWidth;
+    var vMin = 1-vHeight;
+    var vMarginHeight = data.margin/textureHeight;
     var textureCoordinates = new Float32Array([
         // for the tail of the balloon, take color from margin where there is no text
-        0, 0,     margin/canvas.width, 1,  0, 1,
-        uMax, 0,  uMax, 1,                 0, 1,
-        0, 1,     0, 0,                    uMax, 0
+        0.5, 1-vMarginHeight,  0.5+uMarginWidth, 1,  0.5, 1,
+        uMax, vMin,            uMax, 1,              uMin, 1,
+        uMin, 1,               uMin, vMin,           uMax, vMin
     ]);
     geometry.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
     geometry.addAttribute('uv', new THREE.BufferAttribute(textureCoordinates, 2));
@@ -177,9 +241,17 @@ View.makeBalloon = function(text) {
         transparent: true,
         opacity: View.balloonAlphaMax
     });
-    var mesh = new THREE.Mesh(geometry, material);
 
-    return mesh;
+    if (data.character.balloonModel)
+        data.character.model.remove(data.character.balloonModel);
+
+    data.character.balloonModel = new THREE.Mesh(geometry, material);
+    data.character.balloonModel.rotation.order = 'YXZ';
+    var balloonScale = data.character.balloonModel.scale;
+    balloonScale.x = balloonScale.y = balloonScale.z = 0.12;
+    data.character.balloonModel.position.y = 0.5+0.3*balloonScale.x;
+
+    data.character.model.add(data.character.balloonModel);
 }
 
 View.PlayerCamera = function() {
