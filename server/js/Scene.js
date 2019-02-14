@@ -27,7 +27,7 @@ Scene.Planet = function() {
 }
 
 Scene.Planet.prototype.setAltitudeMap = function(img) {
-    var canvas = new Canvas(img.width, img.height);
+    var canvas = Canvas.createCanvas(img.width, img.height);
     var ctx = canvas.getContext('2d');
     ctx.drawImage(img, 0, 0);
     this.altitudeMap = {};
