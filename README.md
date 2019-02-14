@@ -8,7 +8,6 @@ Server
 
 Install nginx:
 ```bash
-sudo apt-add-repository ppa:nginx/stable
 sudo apt update
 sudo apt install nginx
 ```
