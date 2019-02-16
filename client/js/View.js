@@ -44,7 +44,7 @@ View.init = function() {
 
 View.makeBlock = function(square, blockId, planet) {
     var geometry = new THREE.Geometry();
-    var segments = 32;
+    var segments = 16;
 
     for (var iVertex = 0; iVertex <= segments; iVertex++) {
         var uSquare = (blockId[0]+iVertex/segments)/planet.blocksPerSide;

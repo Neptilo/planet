@@ -2,13 +2,15 @@ Game = {};
 
 Game.slopeThreshold = 1;
 
+Game.taskList = [];
+
 Game.init = function() {
     Game.lastTime = 0;
     Game.tick();
 }
 
 Game.tick = function() {
-    requestAnimationFrame(Game.tick, 15);
+    requestAnimationFrame(Game.tick);
     var timeNow = new Date().getTime();
     if (Game.lastTime != 0) {
         var deltaTime = timeNow-Game.lastTime;
@@ -70,9 +72,13 @@ Game.tick = function() {
     View.camera.applyActions();
     View.camera.position.z = View.camera.distance;
 
-    // animate
-
     View.renderer.render(View.scene, View.camera);
+
+    // run scheduled tasks
+    while (Game.taskList.length && new Date().getTime()-Game.lastTime < 15) {
+        var task = Game.taskList.shift();
+        task.handler(task.data);
+    }
 }
 
 Game.getAltitudeFromUv = function(uvSquare, square, planet) {

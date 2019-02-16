@@ -44,7 +44,7 @@ Scene.Planet.prototype.setAltitudeMap = function(img) {
 
 Scene.Character = function(data) {
     // characteristics
-    this.speed = .01;
+    this.speed = .007;
     this.angularSpeed = .002;
     this.jumpSpeed = .02;
     this.eyeAltitude = 1;

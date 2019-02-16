@@ -40,7 +40,7 @@ Scene.Planet = function() {
     this.minAltitude = -2.5;
     this.maxAltitude = 2.5;
     this.gravity = .0001;
-    this.blocksPerSide = 32; // The number of blocks in a square is the square of this.
+    this.blocksPerSide = 48; // The number of blocks in a square is the square of this.
     this.coordInds = [
         [[1, 2], [1, 0], [1, 2]],
         [[2, 1], [0, 1], [2, 1]],
@@ -93,7 +93,7 @@ Scene.Planet.prototype.updateTerrain = function(uv, square) {
     var blockInd = Game.getBlockIndFromUv(uv, this);
 
     // unload far away blocks
-    var blockUnloadDistance = 3;
+    var blockUnloadDistance = 4;
     for (var id in this.blocks) {
         var block = this.blocks[id];
         var j = id%this.blocksPerSide;
@@ -110,19 +110,32 @@ Scene.Planet.prototype.updateTerrain = function(uv, square) {
     }
 
     // load close blocks
-    var blockLoadDistance = 2;
+    var blockLoadDistance = 3;
     for (var i = -blockLoadDistance; i <= blockLoadDistance; i++) {
         for (var j = -blockLoadDistance; j <= blockLoadDistance; j++) {
             var indSquare = this.blockAdd(blockInd, square, [i, j]);
-            if (indSquare != null) {
-                var ind = indSquare[0];
-                var sqr = indSquare[1];
-                var id = this.getBlockIdFromInd(ind, sqr);
-                if (this.blocks[id] == undefined) {
-                    this.blocks[id] = View.makeBlock(sqr, ind, this);
-                    View.scene.add(this.blocks[id]);
-                }
+            if (indSquare == null) {
+                continue;
             }
+            var ind = indSquare[0];
+            var sqr = indSquare[1];
+            var id = this.getBlockIdFromInd(ind, sqr);
+            if (this.blocks[id] != undefined) {
+                continue; // block already exists
+            }
+            // schedule block creation after render
+            Game.taskList.push({
+                handler: function(data) {
+                    // double-check block doesn't already exist
+                    if (data.planet.blocks[data.id] != undefined) {
+                        return;
+                    }
+                    data.planet.blocks[data.id] =
+                        View.makeBlock(data.square, data.ind, data.planet);
+                    View.scene.add(data.planet.blocks[data.id]);
+                },
+                data: {planet: this, id: id, square: sqr, ind: ind}
+            });
         }
     }
 }
@@ -224,7 +237,7 @@ Scene.Planet.prototype.getOrientedCoordinates = function(coords, square) {
 
 Scene.Character = function(data) {
     // characteristics
-    this.speed = .01;
+    this.speed = .007;
     this.angularSpeed = .002;
     this.jumpSpeed = .02;
     this.eyeAltitude = 1;
