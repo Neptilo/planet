@@ -42,17 +42,21 @@ View.init = function() {
     View.scene.add(View.ambient);
 }
 
-View.makeBlock = function(square, blockId, planet) {
+// sqrUvBounds = [uMin, vMin, uMax, vMax]
+View.makeBlock = function(square, sqrUvBounds, planet) {
     var geometry = new THREE.Geometry();
     var segments = 16;
+    var uExtent = sqrUvBounds[2]-sqrUvBounds[0];
+    var vExtent = sqrUvBounds[3]-sqrUvBounds[1];
 
     for (var iVertex = 0; iVertex <= segments; iVertex++) {
-        var uSquare = (blockId[0]+iVertex/segments)/planet.blocksPerSide;
+        var uSquare = sqrUvBounds[0]+uExtent*iVertex/segments;
         var u = 2*uSquare-1;
         for (var jVertex = 0; jVertex <= segments; jVertex++) {
-            var vSquare = (blockId[1]+jVertex/segments)/planet.blocksPerSide;
+            var vSquare = sqrUvBounds[1]+vExtent*jVertex/segments;
             var v = 2*vSquare-1;
-            var altitude = Game.getAltitudeFromUv([uSquare, vSquare], [square[0], square[1]], planet);
+            var altitude = Game.getAltitudeFromUv(
+                [uSquare, vSquare], [square[0], square[1]], planet);
             var fac = (planet.radius+altitude)/Math.sqrt(1+u*u+v*v);
             var coords = [fac*u, fac*v, fac];
             var vtx = planet.getUnorientedCoordinates(coords, square);
@@ -61,11 +65,11 @@ View.makeBlock = function(square, blockId, planet) {
     }
 
     for (var iFace = 0; iFace < segments; iFace++) {
-        var uTex = (square[0]+(blockId[0]+iFace/segments)/planet.blocksPerSide)/3;
-        var nextUTex = (square[0]+(blockId[0]+(iFace+1)/segments)/planet.blocksPerSide)/3;
+        var uTex = (square[0]+sqrUvBounds[0]+uExtent*iFace/segments)/3;
+        var nextUTex = (square[0]+sqrUvBounds[0]+uExtent*(iFace+1)/segments)/3;
         for (var jFace = 0; jFace < segments; jFace++) {
-            var vTex = (square[1]+(blockId[1]+jFace/segments)/planet.blocksPerSide)/2;
-            var nextVTex = (square[1]+(blockId[1]+(jFace+1)/segments)/planet.blocksPerSide)/2;
+            var vTex = (square[1]+sqrUvBounds[1]+vExtent*jFace/segments)/2;
+            var nextVTex = (square[1]+sqrUvBounds[1]+vExtent*(jFace+1)/segments)/2;
             geometry.faces.push(new THREE.Face3(
                         (segments+1)*iFace+jFace,
                         (segments+1)*(iFace+1)+jFace,
