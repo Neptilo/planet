@@ -65,8 +65,11 @@ Scene.Planet = function() {
         [[0, 0], [2, 0]],
         [[1, 0], [1, 1]]];
     this.uSigns = [[-1, 1], [1, 1], [1, -1]];
+    this.blockLoadDistance = 1;
+    this.blockUnloadDistance = 3; // must be at least 2 more than blockLoadDistance
 
     this.blocks = {};
+    this.terrainVisitor = new Scene.TerrainVisitor(this);
 
     // altitude
     var planet = this;
@@ -102,8 +105,6 @@ Scene.Planet.prototype.setAltitudeMap = function(img) {
 
 Scene.Planet.prototype.updateTerrain = function(uv, square) {
     var blockInd = Game.getBlockIndFromUv(uv, this);
-    var blockLoadDistance = 1;
-    var blockUnloadDistance = 3; // must be at least 2 more than blockLoadDistance
 
     // unload far away blocks
     for (var id in this.blocks) {
@@ -115,17 +116,15 @@ Scene.Planet.prototype.updateTerrain = function(uv, square) {
         var jSquare = tmp%2;
         var iSquare = (tmp-jSquare)/2;
         var d = this.blockDistance(blockInd, square, [i, j], [iSquare, jSquare]);
-        if (d > blockUnloadDistance) {
-            this.deleteBlockNode(this.blocks[id]);
+        if (d > this.blockUnloadDistance) {
+            this.terrainVisitor.deleteBlockNode(this.blocks[id]);
             delete this.blocks[id];
         }
     }
 
     // load all blocks within a radius of blockLoadDistance
-    this.square = square;
-    this.uv = uv;
-    for (var i = -blockLoadDistance; i <= blockLoadDistance; i++) {
-        for (var j = -blockLoadDistance; j <= blockLoadDistance; j++) {
+    for (var i = -this.blockLoadDistance; i <= this.blockLoadDistance; i++) {
+        for (var j = -this.blockLoadDistance; j <= this.blockLoadDistance; j++) {
             var indSquare = this.blockAdd(blockInd, square, [i, j]);
             if (indSquare == null) {
                 continue;
@@ -161,6 +160,8 @@ Scene.Planet.prototype.updateTerrain = function(uv, square) {
     }
 
     // visit all existing blocks and refine every leaf down to the required depth
+    this.terrainVisitor.square = square;
+    this.terrainVisitor.uv = uv;
     for (var id in this.blocks) {
         var node = this.blocks[id];
         var j = id%this.blocksPerSide;
@@ -173,110 +174,12 @@ Scene.Planet.prototype.updateTerrain = function(uv, square) {
             i/this.blocksPerSide, j/this.blocksPerSide,
             (i+1)/this.blocksPerSide, (j+1)/this.blocksPerSide
         ];
-        this.visitBlockNode(node, '', [i, j], [iSquare, jSquare], sqrUvBounds);
-    }
-}
-
-// recursively delete block and all its branches, also removing any representation
-// from the view
-Scene.Planet.prototype.deleteBlockNode = function(node) {
-    View.scene.remove(node.mesh);
-    for (var i in node.subBlocks)
-        this.deleteBlockNode(node.subBlocks[i]);
-    node.subBlocks = [];
-    delete node.mesh;
-}
-
-Scene.Planet.prototype.visitBlockNode = function(
-    node, path, blockInd, square, sqrUvBounds) {
-    // compute distance
-    var d = this.uvToBoundsDistance(this.uv, this.square, sqrUvBounds, square);
-    var depth = path.length;
-    var dLoad = 0.1;
-    var unloadOffset = 0.02;
-    var depthMax = 3;
-    var weightedDist = dLoad*(1-depth/depthMax);
-
-    if (node.subBlocks.length) {
-        // block has children
-
-        if (!node.mesh) {
-            console.error('Block has children but no mesh');
-            return;
-        }
-
-        // decide if sub-blocks should be deleted
-        if (d > weightedDist+unloadOffset) {
-
-            // node is too far - delete its children
-            for (var i in node.subBlocks)
-                this.deleteBlockNode(node.subBlocks[i]);
-            node.subBlocks = [];
-
-            // and show parent block instead
-            View.scene.add(node.mesh);
-
-        } else if (node.subBlocks.length == 4) {
-            // block is not too far and has all its children
-
-            // if it is shown in scene, hide it
-            var nodeInScene = node.mesh.parent === View.scene;
-            if (nodeInScene)
-                View.scene.remove(node.mesh);
-
-            // visit children nodes
-            // don't visit sub-blocks until all four are available
-            for (var i = 0; i < 4; i++)
-            {
-                // if node block was shown in scene (and now hidden),
-                // show the 4 sub-blocks
-                if (nodeInScene)
-                    View.scene.add(node.subBlocks[i].mesh);
-
-                // split sqrUvBounds into 4 quarters based on i
-                var childSqrUvBounds = Scene.getBoundsQuarter(sqrUvBounds, i);
-                this.visitBlockNode(
-                    node.subBlocks[i],
-                    path+String(i),
-                    blockInd,
-                    square,
-                    childSqrUvBounds);
-            }
-        }
-    } else if (d <= weightedDist) {
-        // block has no child and is near enough
-        // refine it by spawning 4 children
-        for (var i = 0; i < 4; i++) {
-            var childPath = path+String(i);
-            // schedule block creation after render
-            Game.taskList.push({
-                handler: function(data) {
-                    // check block list still exists
-                    if (!data.blockList)
-                    {
-                        console.error('Creating block in non-existent list');
-                        return;
-                    }
-                    // check block doesn't already exist
-                    if (data.blockList[data.id])
-                        return;
-                    var subX = data.id%2;
-                    var subY = (data.id-subX)/2;
-                    data.blockList[data.id] = {
-                        mesh: View.makeBlock(
-                            data.square, data.sqrUvBounds, data.planet),
-                        subBlocks: []
-                    }
-                },
-                data: {
-                    planet: this,
-                    blockList: node.subBlocks,
-                    id: i,
-                    square: square,
-                    sqrUvBounds: Scene.getBoundsQuarter(sqrUvBounds, i)
-                }
-            });
-        }
+        this.terrainVisitor.visitBlockNode(
+            node,
+            '',
+            [i, j],
+            [iSquare, jSquare],
+            sqrUvBounds);
     }
 }
 
@@ -418,6 +321,128 @@ Scene.Planet.prototype.getOrientedCoordinates = function(coords, square) {
     for (var k = 0; k < 3; k++)
         res[this.coordInds[k][i][j]] = this.coordSigns[k][i][j]*coords[k];
     return res;
+}
+
+// helper class grouping information needed when visiting a planet's terrain
+// and the recursive methods to do so
+Scene.TerrainVisitor = function(planet) {
+    this.planet = planet;
+
+    // maximum distance, in UV units, at which blocks at 0-depth are loaded
+    // The distance at which blocks at maximum depth are loaded is 0
+    // and the distance at other depths is determined linearly from these rules
+    this.loadDist = 0.25;
+
+    // in UV coordinates
+    // Blocks are unloaded unloadOffset further away than the distance at which
+    // they're loaded, regardless of the depth
+    this.unloadOffset = 0.05;
+
+    this.depthMax = 3;
+
+    this.uv = null; // UV coordinates of the player on the square
+    this.square = null; // square where the player is located
+}
+
+// recursively delete block and all its branches, also removing any representation
+// from the view
+Scene.TerrainVisitor.prototype.deleteBlockNode = function(node) {
+    View.scene.remove(node.mesh);
+    for (var i in node.subBlocks)
+        this.deleteBlockNode(node.subBlocks[i]);
+    node.subBlocks = [];
+    delete node.mesh;
+}
+
+// recursively visit block to load/unload the sub-blocks that need to be
+Scene.TerrainVisitor.prototype.visitBlockNode = function(
+    node, path, blockInd, square, sqrUvBounds) {
+    // compute distance
+    var d = this.planet.uvToBoundsDistance(this.uv, this.square, sqrUvBounds, square);
+    var depth = path.length;
+    var weightedDist = this.loadDist*(1-depth/this.depthMax);
+
+    if (node.subBlocks.length) {
+        // block has children
+
+        if (!node.mesh) {
+            console.error('Block has children but no mesh');
+            return;
+        }
+
+        // decide if sub-blocks should be deleted
+        if (d > weightedDist+this.unloadOffset) {
+
+            // node is too far - delete its children
+            for (var i in node.subBlocks)
+                this.deleteBlockNode(node.subBlocks[i]);
+            node.subBlocks = [];
+
+            // and show parent block instead
+            View.scene.add(node.mesh);
+
+        } else if (node.subBlocks.length == 4) {
+            // block is not too far and has all its children
+
+            // if it is shown in scene, hide it
+            var nodeInScene = node.mesh.parent === View.scene;
+            if (nodeInScene)
+                View.scene.remove(node.mesh);
+
+            // visit children nodes
+            // don't visit sub-blocks until all four are available
+            for (var i = 0; i < 4; i++)
+            {
+                // if node block was shown in scene (and now hidden),
+                // show the 4 sub-blocks
+                if (nodeInScene)
+                    View.scene.add(node.subBlocks[i].mesh);
+
+                // split sqrUvBounds into 4 quarters based on i
+                var childSqrUvBounds = Scene.getBoundsQuarter(sqrUvBounds, i);
+                this.visitBlockNode(
+                    node.subBlocks[i],
+                    path+String(i),
+                    blockInd,
+                    square,
+                    childSqrUvBounds);
+            }
+        }
+    } else if (d <= weightedDist) {
+        // block has no child and is near enough
+        // refine it by spawning 4 children
+        for (var i = 0; i < 4; i++) {
+            var childPath = path+String(i);
+            // schedule block creation after render
+            Game.taskList.push({
+                handler: function(data) {
+                    // check block list still exists
+                    if (!data.blockList)
+                    {
+                        console.error('Creating block in non-existent list');
+                        return;
+                    }
+                    // check block doesn't already exist
+                    if (data.blockList[data.id])
+                        return;
+                    var subX = data.id%2;
+                    var subY = (data.id-subX)/2;
+                    data.blockList[data.id] = {
+                        mesh: View.makeBlock(
+                            data.square, data.sqrUvBounds, data.planet),
+                        subBlocks: []
+                    }
+                },
+                data: {
+                    planet: this.planet,
+                    blockList: node.subBlocks,
+                    id: i,
+                    square: square,
+                    sqrUvBounds: Scene.getBoundsQuarter(sqrUvBounds, i)
+                }
+            });
+        }
+    }
 }
 
 Scene.Character = function(data) {

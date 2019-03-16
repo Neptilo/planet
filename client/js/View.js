@@ -45,7 +45,7 @@ View.init = function() {
 // sqrUvBounds = [uMin, vMin, uMax, vMax]
 View.makeBlock = function(square, sqrUvBounds, planet) {
     var geometry = new THREE.Geometry();
-    var segments = 16;
+    var segments = 8;
     var uExtent = sqrUvBounds[2]-sqrUvBounds[0];
     var vExtent = sqrUvBounds[3]-sqrUvBounds[1];
 
