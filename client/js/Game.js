@@ -176,6 +176,9 @@ Game.applyGravity = function(deltaTime, planet) {
 }
 
 Game.moveObject = function(object, deltaTime, planet) {
+    if (!deltaTime)
+        return;
+    
     // ground contact test
     if (object.altitude <= object.groundAltitude) {
         // touching the ground: apply actions
