@@ -131,22 +131,7 @@ Scene.Planet.prototype.updateTerrain = function(uv, square) {
                 ind[0]/this.blocksPerSide, ind[1]/this.blocksPerSide,
                 (ind[0]+1)/this.blocksPerSide, (ind[1]+1)/this.blocksPerSide
             ];
-            Game.taskList.push({
-                handler: function(data) {
-                    // double-check block doesn't already exist
-                    if (data.planet.blocks[data.id] != undefined) {
-                        return;
-                    }
-                    data.planet.blocks[data.id] = {
-                        mesh: View.makeBlock(
-                            data.square, data.sqrUvBounds, data.planet),
-                        subBlocks: []
-                    }
-
-                    View.scene.add(data.planet.blocks[data.id].mesh);
-                },
-                data: {planet: this, id: id, square: sqr, sqrUvBounds: sqrUvBounds}
-            });
+            this.createBlockLater(this.blocks, id, sqr, sqrUvBounds);
         }
     }
 
@@ -172,6 +157,36 @@ Scene.Planet.prototype.updateTerrain = function(uv, square) {
             [iSquare, jSquare],
             sqrUvBounds);
     }
+}
+
+Scene.Planet.prototype.createBlockLater = function(
+    blockList, id, square, sqrUvBounds) {
+    Game.taskList.push({
+        handler: function(data) {
+            // check block list still exists
+            if (!data.blockList)
+            {
+                console.error('Creating block in non-existent list');
+                return;
+            }
+            // check block doesn't already exist
+            if (data.blockList[data.id])
+                return;
+            data.blockList[data.id] = {
+                mesh: View.makeBlock(
+                    data.square, data.sqrUvBounds, data.planet),
+                subBlocks: []
+            }
+
+            View.scene.add(data.blockList[data.id].mesh);
+        },
+        data: {
+            planet:         this,
+            blockList:      blockList,
+            id:             id,
+            square:         square,
+            sqrUvBounds:    sqrUvBounds}
+    });
 }
 
 // returns the distance between uv and the nearest point on the given uv bounds
@@ -381,33 +396,11 @@ Scene.TerrainVisitor.prototype.visitBlockNode = function(
         for (var i = 0; i < 4; i++) {
             var childPath = path+String(i);
             // schedule block creation after render
-            Game.taskList.push({
-                handler: function(data) {
-                    // check block list still exists
-                    if (!data.blockList)
-                    {
-                        console.error('Creating block in non-existent list');
-                        return;
-                    }
-                    // check block doesn't already exist
-                    if (data.blockList[data.id])
-                        return;
-                    var subX = data.id%2;
-                    var subY = (data.id-subX)/2;
-                    data.blockList[data.id] = {
-                        mesh: View.makeBlock(
-                            data.square, data.sqrUvBounds, data.planet),
-                        subBlocks: []
-                    }
-                },
-                data: {
-                    planet: this.planet,
-                    blockList: node.subBlocks,
-                    id: i,
-                    square: square,
-                    sqrUvBounds: Geom.getBoundsQuarter(sqrUvBounds, i)
-                }
-            });
+            this.planet.createBlockLater(
+                node.subBlocks,
+                i,
+                square,
+                Geom.getBoundsQuarter(sqrUvBounds, i));
         }
     }
 }
