@@ -37,15 +37,6 @@ Scene.removeCharacter = function(characterId) {
     delete Scene.objects[characterId];
 }
 
-Scene.getBoundsQuarter = function(bounds, quarterInd) {
-    var boundsQuarter = Array.from(bounds);
-    var x = quarterInd%2;
-    var y = (quarterInd-x)/2;
-    boundsQuarter[2*(1-x)] = (bounds[0]+bounds[2])/2;
-    boundsQuarter[2*(1-y)+1] = (bounds[1]+bounds[3])/2;
-    return boundsQuarter;
-}
-
 Scene.Planet = function() {
     this.radius = 100;
     this.minAltitude = -2.5;
@@ -188,7 +179,7 @@ Scene.Planet.prototype.updateTerrain = function(uv, square) {
 Scene.Planet.prototype.uvToBoundsDistance = function(
     uv, square0, sqrUvBounds, square1) {
     if (square0[0] == square1[0] && square0[1] == square1[1]) {
-        return Scene.pointToBoundsDistance(uv, sqrUvBounds);
+        return Geom.pointToBoundsDistance(uv, sqrUvBounds);
     } else {
         var coords = [];
         coords[0] = uv[0]-0.5;
@@ -201,48 +192,24 @@ Scene.Planet.prototype.uvToBoundsDistance = function(
         coords[0] = sqrUvBounds[2]-0.5;
         coords[1] = sqrUvBounds[3]-0.5;
         var maxOnCube = this.getUnorientedCoordinates(coords, square1);
-        return Scene.pointToBoundsDistance(posOnCube, minOnCube.concat(maxOnCube));
+        return Geom.pointToBoundsDistance(posOnCube, minOnCube.concat(maxOnCube));
     }
-}
-
-// returns the distance between a point [x_0, x_1...] and bounds
-// [min_0, min_1..., max_0, max_1...] in any dimension
-Scene.pointToBoundsDistance = function(pt, bounds) {
-    var dim = pt.length;
-    if (bounds.length != 2*dim) {
-        log.error('Dimension mismatch in pointToBoundsDistance');
-        return 0;
-    }
-    var dist2 = 0;
-    for (var i = 0; i < dim; i++) {
-        var nearest = pt[i];
-        if (nearest < bounds[i])
-            nearest = bounds[i];
-        else if (nearest > bounds[dim+i])
-            nearest = bounds[dim+i];
-        var diff = nearest-pt[i];
-        dist2 += diff*diff;
-    }
-    return Math.sqrt(dist2);
 }
 
 // returns the distance in terms of blocks between two blocks
 Scene.Planet.prototype.blockDistance = function(ind0, square0, ind1, square1) {
     if (square0[0] == square1[0] && square0[1] == square1[1])
-        return Math.max(Math.abs(ind1[0]-ind0[0]), Math.abs(ind1[1]-ind0[1]));
+        return Geom.dist(ind0, ind1, 0);
     else {
         var coords = [];
         coords[0] = ind0[0]-this.blocksPerSide/2+0.5;
         coords[1] = ind0[1]-this.blocksPerSide/2+0.5;
         coords[2] = this.blocksPerSide/2;
-        var A = this.getUnorientedCoordinates(coords, square0);
+        var a = this.getUnorientedCoordinates(coords, square0);
         coords[0] = ind1[0]-this.blocksPerSide/2+0.5;
         coords[1] = ind1[1]-this.blocksPerSide/2+0.5;
-        var B = this.getUnorientedCoordinates(coords, square1);
-        return Math.max(Math.max(
-            Math.abs(B[0]-A[0]),
-            Math.abs(B[1]-A[1])),
-            Math.abs(B[2]-A[2]));
+        var b = this.getUnorientedCoordinates(coords, square1);
+        return Geom.dist(a, b, 0);
     }
 }
 
@@ -399,7 +366,7 @@ Scene.TerrainVisitor.prototype.visitBlockNode = function(
                     View.scene.add(node.subBlocks[i].mesh);
 
                 // split sqrUvBounds into 4 quarters based on i
-                var childSqrUvBounds = Scene.getBoundsQuarter(sqrUvBounds, i);
+                var childSqrUvBounds = Geom.getBoundsQuarter(sqrUvBounds, i);
                 this.visitBlockNode(
                     node.subBlocks[i],
                     path+String(i),
@@ -438,7 +405,7 @@ Scene.TerrainVisitor.prototype.visitBlockNode = function(
                     blockList: node.subBlocks,
                     id: i,
                     square: square,
-                    sqrUvBounds: Scene.getBoundsQuarter(sqrUvBounds, i)
+                    sqrUvBounds: Geom.getBoundsQuarter(sqrUvBounds, i)
                 }
             });
         }
