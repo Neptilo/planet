@@ -15,6 +15,7 @@ Game.tick = function() {
     if (Game.lastTime != 0) {
         var deltaTime = timeNow-Game.lastTime;
         Game.moveObjects(deltaTime, Scene.planet);
+        Game.updateTerrain(Scene.player, Scene.planet);
         Game.applyGravity(deltaTime, Scene.planet);
     }
     Game.lastTime = timeNow;
@@ -162,23 +163,27 @@ Game.getBlockIndFromSphericalPosition = function(theta, phi, planet) {
 
 Game.moveObjects = function(deltaTime, planet) {
     var characters = Scene.objects;
-    for (var i in characters) {
-        var character = characters[i];
-        Game.moveObject(character, deltaTime, planet);
-    }
+    for (var i in characters) 
+        Game.moveObject(characters[i], deltaTime, planet);
+}
+
+Game.updateTerrain = function(player, planet) {
+    var sphericalPos = player.sphericalPosition;
+    var squareUv = Game.getSquareUvFromSphericalPosition(
+        sphericalPos.theta, sphericalPos.phi, planet);
+    planet.updateTerrain(squareUv.uv, squareUv.square);    
 }
 
 Game.applyGravity = function(deltaTime, planet) {
     var objects = Scene.objects;
-    for (var i in objects) {
+    for (var i in objects)
         objects[i].velocity[1] -= deltaTime*planet.gravity;
-    }
 }
 
 Game.moveObject = function(object, deltaTime, planet) {
     if (!deltaTime)
         return;
-    
+
     // ground contact test
     if (object.altitude <= object.groundAltitude) {
         // touching the ground: apply actions
@@ -203,24 +208,22 @@ Game.moveObject = function(object, deltaTime, planet) {
             'phi': object.sphericalPosition.phi,
             'rho': planet.radius+object.altitude
         }
-        var newSphericalPosition = Game.getNewSphericalPostion(sphericalPosition, object.bearing, hd);
+        var newSphericalPosition = Game.getNewSphericalPostion(
+            sphericalPosition, object.bearing, hd);
         var newTheta = newSphericalPosition.theta;
         var newPhi = newSphericalPosition.phi;
         var newBearing = newSphericalPosition.bearing;
-        var newSquareUv = Game.getSquareUvFromSphericalPosition(newTheta, newPhi, planet);
-        var uv = newSquareUv.uv;
-        var square = newSquareUv.square;
-        var newGroundAltitude = Game.getAltitudeFromUv(uv, square, planet);
+        var newSquareUv = Game.getSquareUvFromSphericalPosition(
+            newTheta, newPhi, planet);
+        var newGroundAltitude = Game.getAltitudeFromUv(
+            newSquareUv.uv, newSquareUv.square, planet);
         if ((newGroundAltitude-object.altitude)/Math.abs(hd) <= Game.slopeThreshold) {
             object.sphericalPosition.theta = newTheta;
             object.sphericalPosition.phi = newPhi;
             object.bearing = newBearing;
             object.groundAltitude = newGroundAltitude;
-            if (Scene.player === object)
-                planet.updateTerrain(uv, square);
-        } else {
+        } else
             object.velocity[0] = 0;
-        }
     }
     newAltitude = Math.max(object.altitude+vd, object.groundAltitude);
     object.velocity[1] = (newAltitude-object.altitude)/deltaTime;
