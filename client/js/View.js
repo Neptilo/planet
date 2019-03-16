@@ -64,12 +64,21 @@ View.makeBlock = function(square, sqrUvBounds, planet) {
         }
     }
 
+    var debug = false;
     for (var iFace = 0; iFace < segments; iFace++) {
         var uTex = (square[0]+sqrUvBounds[0]+uExtent*iFace/segments)/3;
         var nextUTex = (square[0]+sqrUvBounds[0]+uExtent*(iFace+1)/segments)/3;
+        if (debug) {
+            uTex = (square[0]+iFace/segments)/3;
+            nextUTex = (square[0]+(iFace+1)/segments)/3;
+        }
         for (var jFace = 0; jFace < segments; jFace++) {
             var vTex = (square[1]+sqrUvBounds[1]+vExtent*jFace/segments)/2;
             var nextVTex = (square[1]+sqrUvBounds[1]+vExtent*(jFace+1)/segments)/2;
+            if (debug) {
+                vTex = (square[1]+jFace/segments)/2;
+                nextVTex = (square[1]+(jFace+1)/segments)/2;
+            }
             geometry.faces.push(new THREE.Face3(
                         (segments+1)*iFace+jFace,
                         (segments+1)*(iFace+1)+jFace,
