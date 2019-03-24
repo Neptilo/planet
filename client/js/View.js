@@ -44,17 +44,32 @@ View.init = function() {
 
     View.blockFaceBuffer = [];
     var segments = View.blockSegments;
+    var even = true; // if true, the square is split along the first diagonal: /
+                     // if false, along the second diagonal: \
     for (var iFace = 0; iFace < segments; iFace++) {
         for (var jFace = 0; jFace < segments; jFace++) {
-            View.blockFaceBuffer.push(new THREE.Face3(
-                        (segments+1)*iFace+jFace,
-                        (segments+1)*(iFace+1)+jFace,
-                        (segments+1)*(iFace+1)+jFace+1));
-            View.blockFaceBuffer.push(new THREE.Face3(
-                        (segments+1)*iFace+jFace,
-                        (segments+1)*(iFace+1)+jFace+1,
-                        (segments+1)*iFace+jFace+1));
+            if (even) {
+                View.blockFaceBuffer.push(new THREE.Face3(
+                            (segments+1)*iFace+jFace,
+                            (segments+1)*(iFace+1)+jFace,
+                            (segments+1)*(iFace+1)+jFace+1));
+                View.blockFaceBuffer.push(new THREE.Face3(
+                            (segments+1)*iFace+jFace,
+                            (segments+1)*(iFace+1)+jFace+1,
+                            (segments+1)*iFace+jFace+1));
+            } else {
+                View.blockFaceBuffer.push(new THREE.Face3(
+                            (segments+1)*iFace+jFace,
+                            (segments+1)*(iFace+1)+jFace,
+                            (segments+1)*iFace+jFace+1));
+                View.blockFaceBuffer.push(new THREE.Face3(
+                            (segments+1)*iFace+jFace+1,
+                            (segments+1)*(iFace+1)+jFace,
+                            (segments+1)*(iFace+1)+jFace+1));
+            }
+            even = !even;
         }
+        even = !even;
     }
 }
 
