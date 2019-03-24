@@ -2,6 +2,7 @@ View = {}
 
 View.resolution = 1;
 View.balloonAlphaMax = 0.75;
+View.blockSegments = 8;
 
 View.init = function() {
     View.scene = new THREE.Scene();
@@ -40,15 +41,31 @@ View.init = function() {
 
     View.ambient = new THREE.AmbientLight(0x000420);
     View.scene.add(View.ambient);
+
+    View.blockFaceBuffer = [];
+    var segments = View.blockSegments;
+    for (var iFace = 0; iFace < segments; iFace++) {
+        for (var jFace = 0; jFace < segments; jFace++) {
+            View.blockFaceBuffer.push(new THREE.Face3(
+                        (segments+1)*iFace+jFace,
+                        (segments+1)*(iFace+1)+jFace,
+                        (segments+1)*(iFace+1)+jFace+1));
+            View.blockFaceBuffer.push(new THREE.Face3(
+                        (segments+1)*iFace+jFace,
+                        (segments+1)*(iFace+1)+jFace+1,
+                        (segments+1)*iFace+jFace+1));
+        }
+    }
 }
 
 // sqrUvBounds = [uMin, vMin, uMax, vMax]
 View.makeBlock = function(square, sqrUvBounds, planet) {
     var geometry = new THREE.Geometry();
-    var segments = 8;
+    var segments = View.blockSegments;
     var uExtent = sqrUvBounds[2]-sqrUvBounds[0];
     var vExtent = sqrUvBounds[3]-sqrUvBounds[1];
 
+    // vertices
     for (var iVertex = 0; iVertex <= segments; iVertex++) {
         var uSquare = sqrUvBounds[0]+uExtent*iVertex/segments;
         var u = 2*uSquare-1;
@@ -64,38 +81,29 @@ View.makeBlock = function(square, sqrUvBounds, planet) {
         }
     }
 
+    // faces
+    for (i in View.blockFaceBuffer)
+        geometry.faces.push(View.blockFaceBuffer[i].clone());
+
+    // texture UVs
     var debug = false;
-    for (var iFace = 0; iFace < segments; iFace++) {
-        var uTex = (square[0]+sqrUvBounds[0]+uExtent*iFace/segments)/3;
-        var nextUTex = (square[0]+sqrUvBounds[0]+uExtent*(iFace+1)/segments)/3;
-        if (debug) {
-            uTex = (square[0]+iFace/segments)/3;
-            nextUTex = (square[0]+(iFace+1)/segments)/3;
+    for (var iFace in geometry.faces) {
+        var face = geometry.faces[iFace];
+        var faceUvs = [];
+        var abc = ['a', 'b', 'c'];
+        for (var iAbc in abc) {
+            var vertInd = face[abc[iAbc]];
+            var jVert = vertInd%(segments+1);
+            var iVert = (vertInd-jVert)/(segments+1);
+            var uTex = (square[0]+sqrUvBounds[0]+uExtent*iVert/segments)/3;
+            if (debug)
+                uTex = (square[0]+iVert/segments)/3;
+            var vTex = (square[1]+sqrUvBounds[1]+vExtent*jVert/segments)/2;
+            if (debug)
+                vTex = (square[1]+jVert/segments)/2;
+            faceUvs.push(new THREE.Vector2(uTex, vTex));
         }
-        for (var jFace = 0; jFace < segments; jFace++) {
-            var vTex = (square[1]+sqrUvBounds[1]+vExtent*jFace/segments)/2;
-            var nextVTex = (square[1]+sqrUvBounds[1]+vExtent*(jFace+1)/segments)/2;
-            if (debug) {
-                vTex = (square[1]+jFace/segments)/2;
-                nextVTex = (square[1]+(jFace+1)/segments)/2;
-            }
-            geometry.faces.push(new THREE.Face3(
-                        (segments+1)*iFace+jFace,
-                        (segments+1)*(iFace+1)+jFace,
-                        (segments+1)*(iFace+1)+jFace+1));
-            geometry.faces.push(new THREE.Face3(
-                        (segments+1)*iFace+jFace,
-                        (segments+1)*(iFace+1)+jFace+1,
-                        (segments+1)*iFace+jFace+1));
-            geometry.faceVertexUvs[0][2*(segments*iFace+jFace)] = [
-                new THREE.Vector2(uTex, vTex),
-                new THREE.Vector2(nextUTex, vTex),
-                new THREE.Vector2(nextUTex, nextVTex)];
-            geometry.faceVertexUvs[0][2*(segments*iFace+jFace)+1] = [
-                new THREE.Vector2(uTex, vTex),
-                new THREE.Vector2(nextUTex, nextVTex),
-                new THREE.Vector2(uTex, nextVTex)];
-        }
+        geometry.faceVertexUvs[0].push(faceUvs);
     }
 
     geometry.computeFaceNormals();
