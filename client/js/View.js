@@ -2,7 +2,7 @@ View = {}
 
 View.resolution = 1;
 View.balloonAlphaMax = 0.75;
-View.blockSegments = 8;
+View.blockSegments = 8; // must be even for a proper block stitching
 
 View.init = function() {
     View.scene = new THREE.Scene();
@@ -42,50 +42,83 @@ View.init = function() {
     View.ambient = new THREE.AmbientLight(0x000420);
     View.scene.add(View.ambient);
 
-    View.blockFaceBuffer = [];
+    // create 9 face buffers with different combinations of special borders
+    // The special borders are designed so that blocks stitch seamlessly with
+    // neighbors with lower LOD.
+    // iBuf and jBuf define which special borders to use
+    View.blockFaceBuffers = [];
     var segments = View.blockSegments;
-    var even = true; // if true, the square is split along the first diagonal: /
-                     // if false, along the second diagonal: \
-    for (var iFace = 0; iFace < segments; iFace++) {
-        for (var jFace = 0; jFace < segments; jFace++) {
-            if (even) {
-                View.blockFaceBuffer.push(new THREE.Face3(
-                            (segments+1)*iFace+jFace,
-                            (segments+1)*(iFace+1)+jFace,
-                            (segments+1)*(iFace+1)+jFace+1));
-                View.blockFaceBuffer.push(new THREE.Face3(
-                            (segments+1)*iFace+jFace,
-                            (segments+1)*(iFace+1)+jFace+1,
-                            (segments+1)*iFace+jFace+1));
-            } else {
-                View.blockFaceBuffer.push(new THREE.Face3(
-                            (segments+1)*iFace+jFace,
-                            (segments+1)*(iFace+1)+jFace,
-                            (segments+1)*iFace+jFace+1));
-                View.blockFaceBuffer.push(new THREE.Face3(
+    for (var iBuf = 0; iBuf < 3; iBuf++) {
+        // 0 means left, 1 none, 2 right
+
+        var bufs = [];
+        for (var jBuf = 0; jBuf < 3; jBuf++) {
+            // 0 means bottom, 1 none, 2 top
+
+            var buf = [];
+
+            // if true, the square is split along the first diagonal: /
+            // if false, along the second diagonal: \
+            var even = true;
+
+            for (var iFace = 0; iFace < segments; iFace++) {
+                for (var jFace = 0; jFace < segments; jFace++) {
+                    var decimateLeft = iFace == 0 && iBuf == 0;
+                    var decimateRight = iFace == segments-1 && iBuf == 2;
+                    var decimateBottom = jFace == 0 && jBuf == 0;
+                    var decimateTop = jFace == segments-1 && jBuf == 2;
+                    if (even) {
+                        if (!decimateRight)
+                            buf.push(new THREE.Face3(
+                                (segments+1)*iFace+jFace,
+                                (segments+1)*(iFace+1+Number(decimateBottom))+jFace,
+                                (segments+1)*(iFace+1)+jFace+1));
+                        if (!decimateTop)
+                            buf.push(new THREE.Face3(
+                                (segments+1)*iFace+jFace,
+                                (segments+1)*(iFace+1)+jFace+1,
+                                (segments+1)*iFace+jFace+1+Number(decimateLeft)));
+                    } else {
+                        if (!decimateBottom && !decimateLeft)
+                            buf.push(new THREE.Face3(
+                                (segments+1)*iFace+jFace,
+                                (segments+1)*(iFace+1)+jFace,
+                                (segments+1)*iFace+jFace+1));
+                        buf.push(new THREE.Face3(
                             (segments+1)*iFace+jFace+1,
                             (segments+1)*(iFace+1)+jFace,
-                            (segments+1)*(iFace+1)+jFace+1));
+                            (segments+1)*(iFace+1+Number(decimateTop))
+                                         +jFace+1+Number(decimateRight)));
+                    }
+                    even = !even;
+                }
+                even = !even;
             }
-            even = !even;
+            bufs.push(buf);
         }
-        even = !even;
+        View.blockFaceBuffers.push(bufs);
     }
 }
 
 // sqrUvBounds = [uMin, vMin, uMax, vMax]
-View.makeBlock = function(square, sqrUvBounds, planet) {
+View.makeBlock = function(square, sqrUvBounds, planet, name) {
     var geometry = new THREE.Geometry();
     var segments = View.blockSegments;
     var uExtent = sqrUvBounds[2]-sqrUvBounds[0];
     var vExtent = sqrUvBounds[3]-sqrUvBounds[1];
 
-    // vertices
-    for (var iVertex = 0; iVertex <= segments; iVertex++) {
-        var uSquare = sqrUvBounds[0]+uExtent*iVertex/segments;
+    // jailbreak THREE.Geometry to store custom vertexUvs buffer
+    geometry.vertexUvs = [];
+    
+    // vertices and their texture UVs
+    var debug = false;
+    for (var iVert = 0; iVert <= segments; iVert++) {
+        var uSquare = sqrUvBounds[0]+uExtent*iVert/segments;
         var u = 2*uSquare-1;
-        for (var jVertex = 0; jVertex <= segments; jVertex++) {
-            var vSquare = sqrUvBounds[1]+vExtent*jVertex/segments;
+        for (var jVert = 0; jVert <= segments; jVert++) {
+
+            // vertex
+            var vSquare = sqrUvBounds[1]+vExtent*jVert/segments;
             var v = 2*vSquare-1;
             var altitude = Game.getAltitudeFromUv(
                 [uSquare, vSquare], [square[0], square[1]], planet);
@@ -93,41 +126,116 @@ View.makeBlock = function(square, sqrUvBounds, planet) {
             var coords = [fac*u, fac*v, fac];
             var vtx = planet.getUnorientedCoordinates(coords, square);
             geometry.vertices.push(new THREE.Vector3(vtx[0], vtx[1], vtx[2]));
+
+            // UV
+            if (debug) {
+                var uSquareTmp = uSquare;
+                uSquare = iVert/segments;
+                vSquare = jVert/segments;
+            }
+            var uTex = (square[0]+uSquare)/3;
+            var vTex = (square[1]+vSquare)/2;
+            if (debug) uSquare = uSquareTmp;
+            geometry.vertexUvs.push(new THREE.Vector2(uTex, vTex));
         }
     }
 
     // faces
-    for (i in View.blockFaceBuffer)
-        geometry.faces.push(View.blockFaceBuffer[i].clone());
-
-    // texture UVs
-    var debug = false;
-    for (var iFace in geometry.faces) {
-        var face = geometry.faces[iFace];
-        var faceUvs = [];
-        var abc = ['a', 'b', 'c'];
-        for (var iAbc in abc) {
-            var vertInd = face[abc[iAbc]];
-            var jVert = vertInd%(segments+1);
-            var iVert = (vertInd-jVert)/(segments+1);
-            var uTex = (square[0]+sqrUvBounds[0]+uExtent*iVert/segments)/3;
-            if (debug)
-                uTex = (square[0]+iVert/segments)/3;
-            var vTex = (square[1]+sqrUvBounds[1]+vExtent*jVert/segments)/2;
-            if (debug)
-                vTex = (square[1]+jVert/segments)/2;
-            faceUvs.push(new THREE.Vector2(uTex, vTex));
-        }
-        geometry.faceVertexUvs[0].push(faceUvs);
+    var defaultFaceBuffer = View.blockFaceBuffers[1][1];
+    geometry.faces = new Array(defaultFaceBuffer.length);
+    for (i in defaultFaceBuffer)
+    {
+        geometry.faces[i] = defaultFaceBuffer[i].clone();
+        geometry.faces[i].color.setRGB(Math.random(), Math.random(), Math.random());
     }
+    // face texture UVs
+    View.updateFaceVertexUvs(geometry);
 
-    geometry.computeFaceNormals();
-    geometry.computeVertexNormals();
+    // normals
+    View.computeVertexNormals(geometry);
+    View.updateFaceVertexNormals(geometry);
 
-    var model = new THREE.Mesh(geometry, planet.material);
+    var model = new THREE.Mesh(geometry, planet.material.clone());
     model.receiveShadow = true;
     model.castShadow = true;
+    model.name = name;
     return model;
+}
+
+View.updateBlockFaceBuffer = function(block) {
+    var mat = block.mesh.material;
+
+    var geometry = block.mesh.geometry;
+
+    // copy face buffer from the appropriate face buffer template
+    var fbi = block.faceBufferInd;
+
+    // TODO clean before merging
+    //mat.color = new THREE.Color(fbi[0]/2, fbi[1]/2, 1/2);
+
+    var faceBuffer = View.blockFaceBuffers[fbi[0]][fbi[1]];
+    geometry.faces = new Array(faceBuffer.length);
+    for (i in faceBuffer)
+        geometry.faces[i] = faceBuffer[i].clone();
+    geometry.elementsNeedUpdate = true;
+
+    // update buffers that depend on it
+    View.updateFaceVertexUvs(geometry);
+    View.updateFaceVertexNormals(geometry);
+}
+
+// update geometry.faceVertexUvs[0] from the custom geometry.vertexUvs
+View.updateFaceVertexUvs = function(geometry) {
+    geometry.faceVertexUvs[0] = new Array(geometry.faces.length);
+    var uvs = geometry.vertexUvs;
+    for (var iFace in geometry.faces) {
+        var face = geometry.faces[iFace];
+        var faceUvs = [
+            uvs[face.a],
+            uvs[face.b],
+            uvs[face.c]];
+        geometry.faceVertexUvs[0][iFace] = faceUvs;
+    }
+}
+
+// compute vertex normals by averaging geometry's face normals
+// and store them in a custom vertexNormals buffer
+View.computeVertexNormals = function(geometry) {
+    geometry.vertexNormals = new Array(geometry.vertices.length);
+    var vn = geometry.vertexNormals;
+    for (var v in geometry.vertices) vn[v] = new THREE.Vector3();
+
+    // vertex normals weighted by triangle areas
+    // http://www.iquilezles.org/www/articles/normals/normals.htm
+    var cb = new THREE.Vector3(), ab = new THREE.Vector3();
+    for (var f in geometry.faces) {
+        var face = geometry.faces[f];
+        var vA = geometry.vertices[face.a];
+        var vB = geometry.vertices[face.b];
+        var vC = geometry.vertices[face.c];
+        cb.subVectors(vC, vB);
+        ab.subVectors(vA, vB);
+        cb.cross(ab);
+        vn[face.a].add(cb);
+        vn[face.b].add(cb);
+        vn[face.c].add(cb);
+    }
+
+    for (var v in geometry.vertices) vn[v].normalize();
+}
+
+// update the vertexNormals buffers stored in each face of geometry
+// from the custom geometry.vertexNormals
+View.updateFaceVertexNormals = function(geometry) {
+    var vn = geometry.vertexNormals;
+    for (var f in geometry.faces) {
+        var face = geometry.faces[f];
+        var fvn = face.vertexNormals;
+        fvn[0] = vn[face.a];
+        fvn[1] = vn[face.b];
+        fvn[2] = vn[face.c];
+    }
+    geometry.normalsNeedUpdate = true;
 }
 
 View.makeCharacter = function(width, height) {

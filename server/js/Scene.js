@@ -9,9 +9,11 @@ Scene.init = function() {
 }
 
 Scene.Planet = function() {
-    this.radius = 100;
-    this.minAltitude = -2.5;
-    this.maxAltitude = 2.5;
+    // TODO These parameters have been divided by 10 for testing
+    // Multiply them by 10 before merging.
+    this.radius = 10;
+    this.minAltitude = -.25;
+    this.maxAltitude = .25;
 
     // altitude
     var planet = this;
