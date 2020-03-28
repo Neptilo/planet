@@ -11,7 +11,6 @@ Scene.makeWorld = function() {
     Connection.characters = null; // We won't need it anymore.
 
     Scene.player = Scene.objects[Connection.clientId];
-    Scene.player.model.add(View.pivot);
 
     // calling getSquareUvFromSphericalPosition because the square uvs have not been
     // computed client-side
@@ -19,21 +18,18 @@ Scene.makeWorld = function() {
     var squareUv = Game.getSquareUvFromSphericalPosition(
         sphericalPosition.theta, sphericalPosition.phi, Scene.planet);
     Scene.planet.updateTerrain(squareUv.uv, squareUv.square);
-    View.pivot.position.y = Scene.player.eyeAltitude-Scene.player.size.height/2;
-    View.sun.target = Scene.player.model;
+    if (View.onPlayerSetup)
+        View.onPlayerSetup(Scene.player);
     Game.init();
 }
 
 Scene.createCharacter = function(characterId, characterData) {
-    var character = new Scene.Character(characterData);
-    Scene.objects[characterId] = character;
-    character.model.rotation.order = 'ZXY';
-    View.scene.add(character.model);
+    Scene.objects[characterId] = new Scene.Character(characterData);
 }
 
 Scene.removeCharacter = function(characterId) {
     var character = Scene.objects[characterId];
-    View.scene.remove(character.model);
+    View.remove(character.model);
     delete Scene.objects[characterId];
 }
 
@@ -134,10 +130,8 @@ Scene.Planet.prototype.updateTerrain = function(uv, square) {
         var jSquare = tmp%2;
         var iSquare = (tmp-jSquare)/2;
         var d = this.blockDistance(blockInd, square, [i, j], [iSquare, jSquare]);
-        if (d > this.blockUnloadDistance) {
-            this.terrainVisitor.deleteBlockNode(this.blocks[id], id+'/');
-            delete this.blocks[id];
-        }
+        if (d > this.blockUnloadDistance)
+            this.terrainVisitor.deleteBlockNode(null, id, id+'/');
     }
 
     // load all blocks within a radius of blockLoadDistance
@@ -157,7 +151,7 @@ Scene.Planet.prototype.updateTerrain = function(uv, square) {
                 ind[0]/this.blocksPerSide, ind[1]/this.blocksPerSide,
                 (ind[0]+1)/this.blocksPerSide, (ind[1]+1)/this.blocksPerSide
             ];
-            this.createBlockLater(this.blocks, id, sqr, sqrUvBounds, id+'/');
+            this.createBlockLater(null, id, sqr, sqrUvBounds, id+'/');
         }
     }
 
@@ -187,34 +181,38 @@ Scene.Planet.prototype.updateTerrain = function(uv, square) {
 }
 
 Scene.createBlock = function(data) {
+    var blockList = data.parentNode ? data.parentNode.subBlocks : data.planet.blocks;
+
     // check block list still exists
-    if (!data.blockList)
+    if (!blockList)
     {
         console.error('Creating block in non-existent list');
         return;
     }
     // check block doesn't already exist
-    if (data.blockList[data.id])
+    if (blockList[data.id])
         return;
 
     // create block
-    var neighbors = [[], [], [], []];
-    data.blockList[data.id] = {
-        mesh: View.makeBlock(
-            data.square, data.sqrUvBounds, data.planet, data.name),
-        subBlocks: [],
-        faceBufferInd: [1, 1],
-        neighbors: neighbors,
-        name: data.name
-    }
-    var curBlock = data.blockList[data.id];
+    Scene.setChild(
+        data.parentNode,
+        data.id,
+        {
+            mesh: View.makeBlock(
+                data.square, data.sqrUvBounds, data.planet, data.name),
+            subBlocks: [],
+            faceBufferInd: [1, 1],
+            neighbors: [[], [], [], []],
+            name: data.name
+        });
+    var curBlock = blockList[data.id];
 
     // if block is top-level, show it right away
     // and connect neighbors
     // iNei represents -x, +x, -y, +y
-    if (data.blockList === data.planet.blocks) {
+    if (!data.parentNode) {
         curBlock.name = data.id+'/';
-        View.scene.add(curBlock.mesh);
+        View.addBlock(curBlock);
         for (var iNei = 0; iNei < 4; iNei++) {
             var dir = iNei%2;
             var dim = (iNei-dir)/2;
@@ -254,35 +252,53 @@ Scene.createBlock = function(data) {
 
             // set this node's neighbors and
             // set it as neighbor of its neighbors
-            neighbors[iNei] = [neighbor]; // by default
-            neighbor.neighbors[iNeiRev] = [curBlock];
+            Scene.setNeighbors(curBlock, iNei, [neighbor]); // by default
+            Scene.setNeighbors(neighbor, iNeiRev, [curBlock]);
             if (neighbor.subBlocks.length == 4) {
                 // magic formulas that give the indices of the two
                 // facing neighbor sub-blocks in the given direction
                 var idA = (1+dim)*dir;
                 var idB = idA+2-dim;
-                var nodeInScene = neighbor.parent === View.scene;
+                var nodeInScene = View.isShown(neighbor);
                 // only if parent neighbor is not shown,
                 // set its children as neighbors
                 if (!nodeInScene)
-                    neighbors[iNei] = [
+                    Scene.setNeighbors(curBlock, iNei, [
                         neighbor.subBlocks[idA],
-                        neighbor.subBlocks[idB]];
-                neighbor.subBlocks[idA].neighbors[iNeiRev] = [curBlock];
-                neighbor.subBlocks[idB].neighbors[iNeiRev] = [curBlock];
+                        neighbor.subBlocks[idB]]);
+                Scene.setNeighbors(neighbor.subBlocks[idA], iNeiRev, [curBlock]);
+                Scene.setNeighbors(neighbor.subBlocks[idB], iNeiRev, [curBlock]);
             } else if (neighbor.subBlocks.length)
                 console.error('A block has sub-blocks but not 4.');
         }
     }
 }
 
+Scene.setNeighbors = function(node, ind, neighbors) {
+    if (View.removeNeighbors)
+        View.removeNeighbors(node, node.neighbors[ind]);
+    node.neighbors[ind] = neighbors;
+    if (View.addNeighbors)
+        View.addNeighbors(node, neighbors);
+}
+
+Scene.setChild = function(node, ind, child) {
+    var blockList = node ? node.subBlocks : this.planet.blocks;
+    if (View.removeChild)
+        View.removeChild(node, blockList[ind]);
+    if (child) blockList[ind] = child;
+    else delete blockList[ind];
+    if (View.addChild)
+        View.addChild(node, child);
+}
+
 Scene.Planet.prototype.createBlockLater = function(
-    blockList, id, square, sqrUvBounds, name) {
+    parentNode, id, square, sqrUvBounds, name) {
     Game.taskList.push({
         handler: Scene.createBlock,
         data: {
             planet:         this,
-            blockList:      blockList,
+            parentNode:      parentNode,
             id:             id,
             square:         square,
             sqrUvBounds:    sqrUvBounds,name:name}
@@ -428,20 +444,22 @@ Scene.TerrainVisitor = function(planet) {
 
 // recursively delete block and all its branches, also removing any representation
 // from the view
-Scene.TerrainVisitor.prototype.deleteBlockNode = function(node, path) {
-    View.scene.remove(node.mesh);
+Scene.TerrainVisitor.prototype.deleteBlockNode = function(parentNode, ind, path) {
+    var blockList = parentNode ? parentNode.subBlocks : Scene.planet.blocks;
+    var node = blockList[ind];
+    View.remove(node.mesh);
     for (var i in node.subBlocks)
-        this.deleteBlockNode(node.subBlocks[i], path+String(i));
+        this.deleteBlockNode(node, i, path+String(i));
     node.subBlocks = [];
+    Scene.setChild(parentNode, ind, null);
 }
-var distMap = {};
+
 // recursively visit block to load/unload the sub-blocks that need to be
 Scene.TerrainVisitor.prototype.visitBlockNode = function(
     node, depth, path, blockInd, square, sqrUvBounds) {
     // compute distance
     var d = this.planet.uvToBoundsDistance(this.uv, this.square, sqrUvBounds, square);
     var weightedDist = this.loadDist*(1-depth/this.depthMax);
-    distMap[path] = d;
 
     if (node.subBlocks.length) {
         // block has children
@@ -459,7 +477,7 @@ Scene.TerrainVisitor.prototype.visitBlockNode = function(
             var mayUnrefine = true;
             for (var i in node.subBlocks) {
                 var subBlock = node.subBlocks[i];
-                anyNodeInScene |= subBlock.mesh.parent === View.scene;
+                anyNodeInScene |= View.isShown(subBlock.mesh);
                 for (var iNei in subBlock.neighbors) {
                     if (subBlock.neighbors[iNei].length == 2) {
                         mayUnrefine = false;
@@ -486,7 +504,7 @@ Scene.TerrainVisitor.prototype.visitBlockNode = function(
                         if (!xNeighbors.length ||
                             xNeighbors[0] !== childXNeighbors[0]) {
                             xNeighbors.push(childXNeighbors[0]);
-                            childXNeighbors[0].neighbors[1-x] = node;
+                            Scene.setNeighbors(childXNeighbors[0], 1-x, [node]);
                             // if we've added 2 neighbors on the same side,
                             // those neighbors must have coarser sides
                             if (xNeighbors.length == 2) {
@@ -503,7 +521,7 @@ Scene.TerrainVisitor.prototype.visitBlockNode = function(
                         if (!yNeighbors.length ||
                             yNeighbors[0] !== childYNeighbors[0]) {
                             yNeighbors.push(childYNeighbors[0]);
-                            childYNeighbors[0].neighbors[3-y] = node;
+                            Scene.setNeighbors(childYNeighbors[0], 3-y, [node]);
                             if (yNeighbors.length == 2) {
                                 yNeighbors[0].faceBufferInd[1] = 2*(1-y);
                                 View.updateBlockFaceBuffer(yNeighbors[0]);
@@ -516,12 +534,12 @@ Scene.TerrainVisitor.prototype.visitBlockNode = function(
 
                 // delete children
                 for (var i in node.subBlocks)
-                    this.deleteBlockNode(node.subBlocks[i], path+String(i));
+                    this.deleteBlockNode(node, i, path+String(i));
 
                 node.subBlocks = [];
 
                 // show parent block
-                View.scene.add(node.mesh);
+                View.addBlock(node);
                 node.name = path;
             }
 
@@ -529,11 +547,11 @@ Scene.TerrainVisitor.prototype.visitBlockNode = function(
             // block is not too far and has all its children
 
             // if it is shown in scene, hide it
-            var nodeInScene = node.mesh.parent === View.scene;
+            var nodeInScene = View.isShown(node.mesh);
             var mayRefine =
                 node.faceBufferInd[0] == 1 && node.faceBufferInd[1] == 1;
             if (nodeInScene && mayRefine) {
-                View.scene.remove(node.mesh);
+                View.remove(node.mesh);
             }
 
             // visit children nodes
@@ -545,23 +563,25 @@ Scene.TerrainVisitor.prototype.visitBlockNode = function(
                     // connect internal neighbors
                     var x = i%2;
                     var y = (i-x)/2;
-                    node.subBlocks[i].neighbors[1-x] = [node.subBlocks[2*y+(1-x)]];
-                    node.subBlocks[i].neighbors[3-y] = [node.subBlocks[2*(1-y)+x]];
+                    Scene.setNeighbors(node.subBlocks[i], 1-x,
+                        [node.subBlocks[2*y+(1-x)]]);
+                    Scene.setNeighbors(node.subBlocks[i], 3-y,
+                        [node.subBlocks[2*(1-y)+x]]);
 
                     // connect external neighbors
                     var xNeighbors = node.neighbors[x];
                     switch (xNeighbors.length) {
                         case 1:
-                            node.subBlocks[i].neighbors[x] = [xNeighbors[0]];
+                            Scene.setNeighbors(node.subBlocks[i], x, [xNeighbors[0]]);
                             node.subBlocks[i].faceBufferInd[0] = 2*x;
                             if (y == 0)
-                                xNeighbors[0].neighbors[1-x] = [
+                                Scene.setNeighbors(xNeighbors[0], 1-x, [
                                     node.subBlocks[x],
-                                    node.subBlocks[2+x]];
+                                    node.subBlocks[2+x]]);
                             break;
                         case 2:
-                            node.subBlocks[i].neighbors[x] = [xNeighbors[y]];
-                            xNeighbors[y].neighbors[1-x] = [node.subBlocks[i]];
+                            Scene.setNeighbors(node.subBlocks[i], x, [xNeighbors[y]]);
+                            Scene.setNeighbors(xNeighbors[y], 1-x, [node.subBlocks[i]]);
                             xNeighbors[y].faceBufferInd[0] = 1;
                             View.updateBlockFaceBuffer(xNeighbors[y]);
                             break;
@@ -569,16 +589,16 @@ Scene.TerrainVisitor.prototype.visitBlockNode = function(
                     var yNeighbors = node.neighbors[2+y];
                     switch (yNeighbors.length) {
                         case 1:
-                            node.subBlocks[i].neighbors[2+y] = [yNeighbors[0]];
+                            Scene.setNeighbors(node.subBlocks[i], 2+y, [yNeighbors[0]]);
                             node.subBlocks[i].faceBufferInd[1] = 2*y;
                             if (x == 0)
-                                yNeighbors[0].neighbors[3-y] = [
+                                Scene.setNeighbors(yNeighbors[0], 3-y, [
                                     node.subBlocks[2*y],
-                                    node.subBlocks[2*y+1]];
+                                    node.subBlocks[2*y+1]]);
                             break;
                         case 2:
-                            node.subBlocks[i].neighbors[2+y] = [yNeighbors[x]];
-                            yNeighbors[x].neighbors[3-y] = [node.subBlocks[i]];
+                            Scene.setNeighbors(node.subBlocks[i], 2+y, [yNeighbors[x]]);
+                            Scene.setNeighbors(yNeighbors[x], 3-y, [node.subBlocks[i]]);
                             yNeighbors[x].faceBufferInd[1] = 1;
                             View.updateBlockFaceBuffer(yNeighbors[x]);
                             break;
@@ -588,7 +608,7 @@ Scene.TerrainVisitor.prototype.visitBlockNode = function(
                         node.subBlocks[i].faceBufferInd[1] != 1)
                         View.updateBlockFaceBuffer(node.subBlocks[i]);
 
-                    View.scene.add(node.subBlocks[i].mesh);
+                    View.addBlock(node.subBlocks[i]);
                     node.subBlocks[i].name = path+String(i);
                 }
 
@@ -612,7 +632,7 @@ Scene.TerrainVisitor.prototype.visitBlockNode = function(
             for (var i = 0; i < 4; i++) {
                 // schedule block creation after render
                 this.planet.createBlockLater(
-                    node.subBlocks,
+                    node,
                     i,
                     square,
                     Geom.getBoundsQuarter(sqrUvBounds, i),
@@ -642,7 +662,7 @@ Scene.Character = function(data) {
     this.balloonText = '';
 
     // view
-    this.model = View.makeCharacter(this.size.width, this.size.height);
+    this.model = View.addCharacter(this.size.width, this.size.height);
 }
 
 Scene.Character.prototype.updateBalloon = function(text) {

@@ -1,0 +1,67 @@
+UserView = {...View};
+
+View.init = function() {
+    var userView = document.createElement('div');
+    var debugView = document.createElement('div');
+    userView.style.height = '100%';
+    userView.style.flex = '50%';
+    debugView.style.height = '100%';
+    debugView.style.flex = '50%';
+    document.body.appendChild(userView);
+    document.body.appendChild(debugView);
+    document.body.style.display = 'flex';
+    UserView.init(userView);
+    DebugView.init(debugView);
+}
+
+View.makeBlock = function(square, sqrUvBounds, planet, name) {
+    return [
+        UserView.makeBlock(square, sqrUvBounds, planet, name),
+        DebugView.makeBlock(square, sqrUvBounds, planet, name)
+    ];
+}
+
+View.addBlock = function(block) {
+    UserView.addBlock(View.getUserNode(block));
+    DebugView.addBlock(View.getDebugNode(block));
+}
+
+View.addNeighbors = function(node, neighbors) {
+    var debugNeighbors = [];
+    for (var iNei = 0; iNei < neighbors.length; ++iNei)
+        debugNeighbors.push(View.getDebugNode(neighbors[iNei]));
+    DebugView.addNeighbors(View.getDebugNode(node), debugNeighbors);
+}
+
+View.removeNeighbors = function(node, neighbors) {
+    var debugNeighbors = [];
+    for (var iNei = 0; iNei < neighbors.length; ++iNei)
+        debugNeighbors.push(View.getDebugNode(neighbors[iNei]));
+    DebugView.removeNeighbors(View.getDebugNode(node), debugNeighbors);
+}
+
+View.addChild = function(node, child) {
+    DebugView.addChild(View.getDebugNode(node), View.getDebugNode(child));
+}
+
+View.removeChild = function(node, child) {
+    DebugView.removeChild(View.getDebugNode(node), View.getDebugNode(child));
+}
+
+View.getUserNode = function(node) {
+    return node ? {mesh: node.mesh[0]} : null;
+}
+
+View.getDebugNode = function(node) {
+    return node ? {mesh: node.mesh[1]} : null;
+}
+
+View.remove = function(model) {
+    UserView.remove(model);
+    DebugView.remove(model);
+}
+
+View.update = function() {
+    UserView.update();
+    DebugView.update();
+}
