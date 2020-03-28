@@ -1,18 +1,14 @@
 Connection = {};
 
 Connection.init = function() {
-    Connection.clientNumber = 0;
-    Connection.activeConnections = [];
-    var WebSocketServer = require('ws');
-    var wss = new WebSocketServer.Server({port: 8010});
-    console.info('Server started');
-
-    wss.on('connection', Connection.onConnection);
+    Server.setOnConnection(function(ws, _req) {
+        Connection.onConnection(ws);
+    });
     Connection.tick();
 }
 
 Connection.onConnection = function(ws) {
-    console.info('Connected client #%s', Connection.clientNumber);
+    console.info('Connected client #%s', Server.clientNumber);
     // generate new character data
     var theta = Math.PI/2;//Math.PI*Math.random();
     var phi = Math.PI/2;//2*Math.PI*Math.random();
@@ -27,14 +23,14 @@ Connection.onConnection = function(ws) {
     };
 
     // update characters data
-    Scene.characters[Connection.clientNumber] = new Scene.Character(characterData);
+    Scene.characters[Server.clientNumber] = new Scene.Character(characterData);
 
     var message;
 
     // tell new client about the configuration of the world
     message = {
         'action': 'acceptConnection',
-        'clientId': Connection.clientNumber,
+        'clientId': Server.clientNumber,
         'characters': Scene.characters
     }
     ws.send(JSON.stringify(message));
@@ -42,16 +38,16 @@ Connection.onConnection = function(ws) {
     // tell other clients about the newcomer
     message = {
         'action': 'putNewCharacter',
-        'characterId': Connection.clientNumber,
+        'characterId': Server.clientNumber,
         'characterData': characterData
     };
-    for (var i in Connection.activeConnections) {
-        var client = Connection.activeConnections[i];
+    for (var i in Server.activeConnections) {
+        var client = Server.activeConnections[i];
         client.send(JSON.stringify(message));
     }
 
     // update active connections
-    Connection.activeConnections[Connection.clientNumber++] = ws;
+    Server.activeConnections[Server.clientNumber++] = ws;
 
     ws.on('message', function(message) {
         Connection.onMessage(message, ws);
@@ -60,8 +56,8 @@ Connection.onConnection = function(ws) {
 
         // find client id
         var clientId;
-        for (var i in Connection.activeConnections) {
-            if (Connection.activeConnections[i] == ws) {
+        for (var i in Server.activeConnections) {
+            if (Server.activeConnections[i] == ws) {
                 clientId = i;
                 break;
             }
@@ -70,15 +66,15 @@ Connection.onConnection = function(ws) {
         delete Scene.characters[clientId];
 
         // update active connections
-        delete Connection.activeConnections[clientId];
+        delete Server.activeConnections[clientId];
 
         // tell other clients that this one left
         var message = {
             'action': 'removeCharacter',
             'characterId': clientId
         };
-        for (var i in Connection.activeConnections)
-            Connection.activeConnections[i].send(JSON.stringify(message));
+        for (var i in Server.activeConnections)
+        Server.activeConnections[i].send(JSON.stringify(message));
     });
 }
 
@@ -87,8 +83,8 @@ Connection.onMessage = function(message, ws) {
 
     // find client id
     var clientId;
-    for (var i in Connection.activeConnections) {
-        if (Connection.activeConnections[i] == ws) {
+    for (var i in Server.activeConnections) {
+        if (Server.activeConnections[i] == ws) {
             clientId = i;
             break;
         }
@@ -129,8 +125,8 @@ Connection.updateState = function() {
     }
 
     var readyStates = ['connecting', 'open', 'closing', 'closed'];
-    for (var i in Connection.activeConnections) {
-        var client = Connection.activeConnections[i];
+    for (var i in Server.activeConnections) {
+        var client = Server.activeConnections[i];
         try {
             client.send(JSON.stringify(message));
         } catch (error) {
