@@ -7,8 +7,9 @@ Server
 ------
 
 Install nodejs and npm:
-On Linux, run `sudo apt install nodejs npm`
-On Windows, download NPM online and install it.
+
+* On Linux, run `sudo apt install nodejs npm`
+* On Windows, download NPM online and install it.
 
 Install modules required to run the server apps:
 Run this command from the repository folder: `npm install express ws express-ws`
