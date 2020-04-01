@@ -26,6 +26,10 @@ View.addBlock = function(block) {
     DebugView.addBlock(View.getDebugNode(block));
 }
 
+View.updateBlockFaceBuffer = function(block) {
+    UserView.updateBlockFaceBuffer(View.getUserNode(block));
+}
+
 View.addNeighbors = function(node, neighbors) {
     var debugNeighbors = [];
     for (var iNei = 0; iNei < neighbors.length; ++iNei)
@@ -49,7 +53,10 @@ View.removeChild = function(node, child) {
 }
 
 View.getUserNode = function(node) {
-    return node ? {mesh: node.mesh[0]} : null;
+    return node ? {
+        mesh: node.mesh[0],
+        faceBufferInd: node.faceBufferInd
+    } : null;
 }
 
 View.getDebugNode = function(node) {
@@ -57,8 +64,17 @@ View.getDebugNode = function(node) {
 }
 
 View.remove = function(model) {
-    UserView.remove(model);
-    DebugView.remove(model);
+    if (model instanceof Array) {
+        UserView.remove(model[0]);
+        DebugView.remove(model[1]);
+    } else {
+        UserView.remove(model);
+        DebugView.remove(model);
+    }
+}
+
+View.isShown = function(model) {
+    return UserView.isShown(model[0]);
 }
 
 View.update = function() {

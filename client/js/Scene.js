@@ -211,7 +211,8 @@ Scene.createBlock = function(data) {
     // and connect neighbors
     // iNei represents -x, +x, -y, +y
     if (!data.parentNode) {
-        curBlock.name = data.id+'/';
+        if (curBlock.name != data.id+'/')
+            console.error(curBlock.name, ' != ', data.id+'/', '. Is it normal?');
         View.addBlock(curBlock);
         for (var iNei = 0; iNei < 4; iNei++) {
             var dir = iNei%2;
@@ -259,7 +260,7 @@ Scene.createBlock = function(data) {
                 // facing neighbor sub-blocks in the given direction
                 var idA = (1+dim)*dir;
                 var idB = idA+2-dim;
-                var nodeInScene = View.isShown(neighbor);
+                var nodeInScene = View.isShown(neighbor.mesh);
                 // only if parent neighbor is not shown,
                 // set its children as neighbors
                 if (!nodeInScene)
