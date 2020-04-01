@@ -8,7 +8,7 @@ DebugView.init = function(container) {
     DebugView.camera =
         new THREE.PerspectiveCamera(45, width/height, .1, 100);
     DebugView.scene.add(DebugView.camera);
-    DebugView.camera.position.set(4, 0, 3);
+    DebugView.camera.position.set(3.5, 0, 0);
     DebugView.camera.lookAt(0, 0, 0);
 
     DebugView.renderer = new THREE.WebGLRenderer();
@@ -102,9 +102,9 @@ DebugView.isShown = function(model) {
 }
 
 DebugView.update = function() {
-    DebugView.camAngle += 0.01;
-    DebugView.camera.position.x = 4*Math.cos(DebugView.camAngle);
-    DebugView.camera.position.y = 4*Math.sin(DebugView.camAngle);
+    DebugView.camAngle += 0.07;
+    DebugView.camera.position.z = 0.04*Math.cos(0.45*DebugView.camAngle);
+    DebugView.camera.position.y = 0.04*Math.sin(DebugView.camAngle);
     DebugView.camera.lookAt(0,0,0);
     DebugView.renderer.render(DebugView.scene, DebugView.camera);
 }
