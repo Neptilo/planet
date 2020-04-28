@@ -275,6 +275,12 @@ Scene.createBlock = function(data) {
     }
 }
 
+Scene.addNeighbor = function(node, ind, neighbor) {
+    node.neighbors[ind].push(neighbor);
+    if (View.addNeighbors)
+        View.addNeighbors(node, [neighbor]);
+}
+
 Scene.setNeighbors = function(node, ind, neighbors) {
     if (View.removeNeighbors)
         View.removeNeighbors(node, node.neighbors[ind]);
@@ -491,7 +497,10 @@ Scene.TerrainVisitor.prototype.visitBlockNode = function(
             if (anyNodeInScene && mayUnrefine) {
                 // merge neighbors from its children
                 // and connect the obtained neighbors
-                node.neighbors = [[], [], [], []];
+
+                // first reset parent node neighbors
+                for (var i = 0; i < 4; i++) Scene.setNeighbors(node, i, []);
+
                 for (var i in node.subBlocks) {
                     var x = i%2;
                     var y = (i-x)/2;
@@ -500,11 +509,12 @@ Scene.TerrainVisitor.prototype.visitBlockNode = function(
                     // 1 neighbor on each side
                     if (childXNeighbors.length) {
                         var xNeighbors = node.neighbors[x];
-                        // check the parent node doesn't already have the
-                        // neighbor we're about to add
+                        // We may already have added 1 neighbor to the parent node.
+                        // Check it doesn't already have the neighbor we're about
+                        // to add
                         if (!xNeighbors.length ||
                             xNeighbors[0] !== childXNeighbors[0]) {
-                            xNeighbors.push(childXNeighbors[0]);
+                            Scene.addNeighbor(node, x, childXNeighbors[0]);
                             Scene.setNeighbors(childXNeighbors[0], 1-x, [node]);
                             // if we've added 2 neighbors on the same side,
                             // those neighbors must have coarser sides
@@ -521,7 +531,7 @@ Scene.TerrainVisitor.prototype.visitBlockNode = function(
                         var yNeighbors = node.neighbors[2+y];
                         if (!yNeighbors.length ||
                             yNeighbors[0] !== childYNeighbors[0]) {
-                            yNeighbors.push(childYNeighbors[0]);
+                            Scene.addNeighbor(node, 2+y, childYNeighbors[0]);
                             Scene.setNeighbors(childYNeighbors[0], 3-y, [node]);
                             if (yNeighbors.length == 2) {
                                 yNeighbors[0].faceBufferInd[1] = 2*(1-y);
