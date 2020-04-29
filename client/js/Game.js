@@ -15,7 +15,10 @@ Game.tick = function() {
     if (Game.lastTime != 0) {
         var deltaTime = timeNow-Game.lastTime;
         Game.moveObjects(deltaTime, Scene.planet);
-        Game.updateTerrain(Scene.player, Scene.planet);
+        // update the terrain
+        // but don't add more work if there's already a lot
+        if (Game.taskList.length < 64)
+            Game.updateTerrain(Scene.player, Scene.planet);
         Game.applyGravity(deltaTime, Scene.planet);
     }
     Game.lastTime = timeNow;
@@ -24,6 +27,11 @@ Game.tick = function() {
     View.update();
 
     // run scheduled tasks
+    if (Game.taskList.length) {
+        // even if we don't have time, do at least one task
+        var task = Game.taskList.shift();
+        task.handler(task.data);
+    }
     while (Game.taskList.length && new Date().getTime()-Game.lastTime < 15) {
         var task = Game.taskList.shift();
         task.handler(task.data);
