@@ -1,6 +1,6 @@
 Connection = {};
 
-Connection.wsUri = "ws://127.0.0.1:8020";
+Connection.wsUri = 'ws://' + window.location.hostname + ':8020';
 
 Connection.init = function() {
     Connection.ws = new WebSocket(Connection.wsUri);
