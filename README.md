@@ -17,9 +17,9 @@ Run this command from the repository folder: `npm install express ws express-ws`
 Or install it globally and create a local link to the global installation:
 ```bash
 sudo npm install -g express ws express-ws
-npm link express
-npm link ws
-npm link express-ws
+sudo npm link express
+sudo npm link ws
+sudo npm link express-ws
 ```
 
 Install node-canvas:
@@ -31,13 +31,13 @@ Run this command from the repository folder: `npm install canvas`
 Or install it globally and create a local link to the global installation:
 ```bash
 sudo npm install -g canvas
-npm link canvas
+sudo npm link canvas
 ```
 
 To run the game
 ===============
 
-Run the game on the server: `node server/js/main.js`
+Run the game on the server: `sudo node server/js/main.js`
 
 Open the game from a client: type the server's IP in the address bar of
 a browser.
