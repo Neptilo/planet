@@ -34,15 +34,12 @@ Scene.removeCharacter = function(characterId) {
 }
 
 Scene.Planet = function() {
-    // TODO These parameters have been divided by 10 for testing
-    // Multiply them by 10 before merging.
-    this.radius = 10;
-    this.minAltitude = -.25;
-    this.maxAltitude = .25;
+    this.radius = 100;
+    this.minAltitude = -2.5;
+    this.maxAltitude = 2.5;
 
     this.gravity = .0001;
-    // TODO Reset to 8 before merging
-    this.blocksPerSide = 4; // The number of blocks in a square is the square of this.
+    this.blocksPerSide = 8; // The number of blocks in a square is the square of this.
 
     /* Mapping of each square to its orthogonal axis and direction in world space
         +--+--+--+
@@ -73,8 +70,8 @@ Scene.Planet = function() {
         [[1, 0], [1, 1]]];
     this.uSigns = [[-1, 1], [1, 1], [1, -1]];
 
-    this.blockLoadDistance = 1; // must be at least 1
-    this.blockUnloadDistance = 3; // must be at least 2 more than blockLoadDistance
+    this.blockLoadDistance = 3; // must be at least 1
+    this.blockUnloadDistance = 5; // must be at least 2 more than blockLoadDistance
 
     this.blocks = {};
     this.terrainVisitor = new Scene.TerrainVisitor(this);
@@ -90,13 +87,7 @@ Scene.Planet = function() {
 
     // view: material
     var diffuseTexture = new THREE.TextureLoader().load("img/map.png");
-    this.material = new THREE.MeshBasicMaterial({
-        // TODO clean comments before merge
-        //wireframe: true,
-        //vertexColors: THREE.FaceColors,
-        //color: new THREE.Color(1/2, 1/2, 1/2)
-        map: diffuseTexture
-    });
+    this.material = new THREE.MeshBasicMaterial({map: diffuseTexture});
 }
 
 Scene.Planet.prototype.setAltitudeMap = function(img) {
@@ -439,14 +430,14 @@ Scene.TerrainVisitor = function(planet) {
     // maximum distance, in UV units, at which blocks at 0-depth are loaded
     // The distance at which blocks at maximum depth are loaded is 0
     // and the distance at other depths is determined linearly from these rules
-    this.loadDist = 0.72;
+    this.loadDist = 0.1;
 
     // in UV coordinates
     // Blocks are unloaded unloadOffset further away than the distance at which
     // they're loaded, regardless of the depth
     this.unloadOffset = 0.05;
 
-    this.depthMax = 2;
+    this.depthMax = 4;
 
     this.uv = null; // UV coordinates of the player on the square
     this.square = null; // square where the player is located
@@ -469,7 +460,8 @@ Scene.TerrainVisitor.prototype.visitBlockNode = function(
     node, depth, path, blockInd, square, sqrUvBounds) {
     // compute distance
     var d = this.planet.uvToBoundsDistance(this.uv, this.square, sqrUvBounds, square);
-    var weightedDist = this.loadDist*(1-depth/this.depthMax);
+    // add 1 to depthMax because weightedDist must not be 0
+    var weightedDist = this.loadDist*(1-depth/(1+this.depthMax));
 
     if (node.subBlocks.length) {
         // block has children

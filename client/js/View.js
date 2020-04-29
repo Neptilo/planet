@@ -184,10 +184,6 @@ View.updateBlockFaceBuffer = function(block) {
 
     // copy face buffer from the appropriate face buffer template
     var fbi = block.faceBufferInd;
-
-    // TODO clean before merging
-    //mat.color = new THREE.Color(fbi[0]/2, fbi[1]/2, 1/2);
-
     var faceBuffer = View.blockFaceBuffers[fbi[0]][fbi[1]];
     geometry.faces = new Array(faceBuffer.length);
     for (i in faceBuffer)
