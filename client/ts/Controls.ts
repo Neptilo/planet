@@ -1,24 +1,22 @@
-Controls = {};
+import { View } from './View.js';
+import { Connection } from './Connection.js';
 
-Controls.characterActions = ['jump', 'left', 'forward', 'right', 'back'];
+const characterActions = ['jump', 'left', 'forward', 'right', 'back'];
 
-Controls.cameraActions = ['zoomOut', 'zoomIn'];
+const cameraActions = ['zoomOut', 'zoomIn'];
 
-Controls.init = function() {
-    document.onkeydown = Controls.handleKeyDown;
-    document.onkeyup = Controls.handleKeyUp;
-    if (View.canvas.addEventListener) {
+export const Controls = {
+    init() {
+        document.onkeydown = handleKeyDown;
+        document.onkeyup = handleKeyUp;
         // IE9, Chrome, Safari, Opera
-        View.canvas.addEventListener('mousewheel', Controls.handleMouseWheel, false);
+        View.canvas!.addEventListener('mousewheel', handleMouseWheel, false);
         // Firefox
-        View.canvas.addEventListener('DOMMouseScroll', Controls.handleMouseWheel, false);
-    } else {
-        // IE6/7/8
-        View.canvas.attachEvent('onmousewheel', Controls.handleMouseWheel);
+        View.canvas!.addEventListener('DOMMouseScroll', handleMouseWheel, false);
     }
 }
     
-Controls.sendActionMessage = function(action, on) {
+function sendActionMessage(action, on) {
     var message = {
         'action': 'setAction',
         'which': action,
@@ -27,7 +25,7 @@ Controls.sendActionMessage = function(action, on) {
     Connection.send(JSON.stringify(message));
 }
 
-Controls.keyToAction = function(key) {
+function keyToAction(key) {
     // these are KeyboardEvent.key keywords
     switch (key) {
         case ' ':
@@ -59,25 +57,25 @@ Controls.keyToAction = function(key) {
     }
 }
 
-Controls.switchAction = function(event, on) {
+function switchAction(event, on) {
     // check if we are editing the text box
     var input = document.getElementsByTagName('input')[0];
     if (input == document.activeElement && event.key != 'Enter')
         return;
 
-    var action = Controls.keyToAction(event.key);
+    var action = keyToAction(event.key);
     if (action) {
-        for (var i in Controls.characterActions) {
-            if (action == Controls.characterActions[i]) {
+        for (var i in characterActions) {
+            if (action == characterActions[i]) {
                 // wait for server agreement before moving
                 // Scene.player.currentActions[action] = on;
-                Controls.sendActionMessage(action, on);
+                sendActionMessage(action, on);
                 break;
             }
         }
-        for (var i in Controls.cameraActions) {
-            if (action == Controls.cameraActions[i]) {
-                View.camera.currentActions[action] = on;
+        for (var i in cameraActions) {
+            if (action == cameraActions[i]) {
+                View.camera!.currentActions[action] = on;
                 break;
             }
         }
@@ -91,33 +89,31 @@ Controls.switchAction = function(event, on) {
 
                 // clear text
                 input.value = ''; // in the text bar
-                Controls.sendActionMessage('talk', ''); // on the server
+                sendActionMessage('talk', ''); // on the server
 
-                input.oninput = Controls.handleTextInput;
+                input.oninput = handleTextInput;
             }
-            input.onpropertychange = input.oninput; // for IE8
         }
     }
 }
 
-Controls.handleKeyDown = function(event) {
-    Controls.switchAction(event, true);
+function handleKeyDown(event) {
+    switchAction(event, true);
 }
 
-Controls.handleKeyUp = function(event) {
-    Controls.switchAction(event, false);
+function handleKeyUp(event) {
+    switchAction(event, false);
 }
 
-Controls.handleMouseWheel = function(e) {
-    var e = window.event || e; // old IE
+function handleMouseWheel(e) {
     var delta = e.wheelDelta || -e.detail;
     if (delta >= 0)
-        View.camera.zoomIn();
+        View.camera!.zoomIn();
     else
-        View.camera.zoomOut();
+        View.camera!.zoomOut();
 }
 
-Controls.handleTextInput = function(event) {
+function handleTextInput(event) {
     var input = document.getElementsByTagName('input')[0];
-    Controls.sendActionMessage('talk', input.value);
+    sendActionMessage('talk', input.value);
 }

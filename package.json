@@ -1,0 +1,35 @@
+{
+  "name": "planet",
+  "version": "1.0.0",
+  "description": "Online in-browser multiplayer game project using WebGL (Three.js) and WebSocket (Node.js)",
+  "homepage": "https://github.com/Neptilo/planet#readme",
+  "bugs": {
+    "url": "https://github.com/Neptilo/planet/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Neptilo/planet.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "server/main.js",
+  "scripts": {
+    "build:client": "tsc -p client/tsconfig.json && cp client/lib/three.module.js client/js/",
+    "build:server": "tsc -p server/tsconfig.json",
+    "build": "npm run build:client && npm run build:server",
+    "server": "node server/js/main.js"
+  },
+  "dependencies": {
+    "canvas": "^3.1.0",
+    "express": "^5.0.2",
+    "express-ws": "^5.0.2",
+    "three": "^0.89.0",
+    "ws": "^8.18.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.2",
+    "@types/express-ws": "^3.0.5",
+    "@types/three": "^0.89.0"
+  }
+}

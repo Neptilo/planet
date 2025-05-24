@@ -1,24 +1,36 @@
-Connection = {};
+import { View } from './View.js';
+import { Controls } from './Controls.js';
+import { Scene } from './Scene.js';
 
-Connection.wsUri = 'ws://' + window.location.hostname + ':8020';
+const wsUri = 'ws://' + window.location.hostname + ':8020';
+let ws;
 
-Connection.init = function() {
-    Connection.ws = new WebSocket(Connection.wsUri);
-    Connection.ws.onopen = Connection.onOpen;
-    Connection.ws.onclose = Connection.onClose;
-    Connection.ws.onmessage = Connection.onMessage;
-    Connection.ws.onerror = Connection.onError;
+export const Connection = {
+    characters: null as any,
+    clientId: -1,
+
+    init() {
+        ws = new WebSocket(wsUri);
+        ws.onopen = onOpen;
+        ws.onclose = onClose;
+        ws.onmessage = onMessage;
+        ws.onerror = onError;
+    },
+
+    send(message) {
+        ws.send(message);
+    }
 }
 
-Connection.onOpen = function(evt) {
+function onOpen(evt) {
     console.info("Connected to WebSocket server");
 }
 
-Connection.onClose = function(evt) {
+function onClose(evt) {
     console.info("Disconnected from WebSocket server");
 }
 
-Connection.onMessage = function(evt) {
+function onMessage(evt) {
     var m = JSON.parse(evt.data);
     switch (m.action) {
         case 'acceptConnection':
@@ -55,14 +67,10 @@ Connection.onMessage = function(evt) {
             }
             break;
         default:
-            console.warn('Unexpected Websocket response: '+m.action);
+            console.warn('Unexpected Websocket response: ' + m.action);
     }
 }
 
-Connection.onError = function(evt) {
+function onError(evt) {
     console.error('WebSocket error: ' + evt.data);
-}
-
-Connection.send = function(message) {
-    Connection.ws.send(message);
 }

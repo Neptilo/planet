@@ -1,43 +1,26 @@
-[Presentation videos for each version](https://www.youtube.com/playlist?list=PLBaRm1Pdp3BGxmX-5eu4P_Jk0iKddUIq9)
+[Here](https://www.youtube.com/playlist?list=PLBaRm1Pdp3BGxmX-5eu4P_Jk0iKddUIq9) are presentation videos for each version.
 
-Installation
-============
-
-Server
-------
+# Installation
 
 Install nodejs and npm:
 
-* On Linux, run `sudo apt install nodejs npm`
+* On Linux, run `sudo apt install nodejs npm`.
+* On Mac, assuming you have Homebrew installed, run `brew install node`.
 * On Windows, download NPM online and install it.
 
-Install modules required to run the server apps:
-Run this command from the repository folder: `npm install express ws express-ws`
+On Linux, you must install dependencies for the node-canvas module to work: `sudo apt install libcairo2-dev libjpeg-dev libgif-dev libpango1.0-dev`
 
-Or install it globally and create a local link to the global installation:
-```bash
-sudo npm install -g express ws express-ws
-sudo npm link express
-sudo npm link ws
-sudo npm link express-ws
-```
+Install modules required to run the server apps: run this command from the repository folder: `npm install`
 
-Install node-canvas:
+Finally, build the app: `npm run build`.
 
-On Linux, you must install dependencies first: `sudo apt install libcairo2-dev libjpeg-dev libgif-dev libpango1.0-dev`
+If you only want to build the server, run `npm run build:server`.
 
-Run this command from the repository folder: `npm install canvas`
+If you only want to build the client, run `npm run build:client`.
 
-Or install it globally and create a local link to the global installation:
-```bash
-sudo npm install -g canvas
-sudo npm link canvas
-```
+# Run the game
 
-To run the game
-===============
-
-Run the game on the server: `sudo node server/js/main.js`
+Start the server: `npm run server`.
 
 Open the game from a client: type the server's IP in the address bar of
-a browser.
+a browser, e.g. `127.0.0.1`.

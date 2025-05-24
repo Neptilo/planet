@@ -1,17 +1,43 @@
-Connection = {};
+import { Server } from './Server.js';
+import { Game } from './Game.js';
+import { Scene, Character } from './Scene.js';
 
-Connection.init = function() {
-    Server.setOnConnection(function(ws, _req) {
-        Connection.onConnection(ws);
-    });
-    Connection.tick();
+export const Connection = {
+    init() {
+        Server.setOnConnection(function (ws, _req) {
+            onConnection(ws);
+        });
+        tick();
+    },
+
+    onMessage(message, ws) {
+        var m = JSON.parse(message);
+
+        // find client id
+        var clientId;
+        for (var i in Server.activeConnections) {
+            if (Server.activeConnections[i] == ws) {
+                clientId = i;
+                break;
+            }
+        }
+
+        switch (m.action) {
+            case 'setAction':
+                var character = Scene.characters[clientId];
+                character.currentActions[m.which] = m.value;
+                break;
+            default:
+                console.warn('Received unexpected action');
+        }
+    }
 }
 
-Connection.onConnection = function(ws) {
+function onConnection(ws) {
     console.info('Connected client #%s', Server.clientNumber);
     // generate new character data
-    var theta = Math.PI/2;//Math.PI*Math.random();
-    var phi = Math.PI/2;//2*Math.PI*Math.random();
+    var theta = Math.PI / 2;//Math.PI*Math.random();
+    var phi = Math.PI / 2;//2*Math.PI*Math.random();
     var altitude = Game.getAltitudeFromSphericalPosition(theta, phi, Scene.planet);
     var characterData = {
         'sphericalPosition': {
@@ -19,11 +45,11 @@ Connection.onConnection = function(ws) {
             'phi': phi
         },
         'altitude': altitude,
-        'bearing': 2*Math.PI*Math.random()
+        'bearing': 2 * Math.PI * Math.random()
     };
 
     // update characters data
-    Scene.characters[Server.clientNumber] = new Scene.Character(characterData);
+    Scene.characters[Server.clientNumber] = new Character(characterData);
 
     var message;
 
@@ -49,10 +75,10 @@ Connection.onConnection = function(ws) {
     // update active connections
     Server.activeConnections[Server.clientNumber++] = ws;
 
-    ws.on('message', function(message) {
+    ws.on('message', function (message) {
         Connection.onMessage(message, ws);
     });
-    ws.on('close', function(code) {
+    ws.on('close', function (code) {
 
         // find client id
         var clientId;
@@ -74,42 +100,20 @@ Connection.onConnection = function(ws) {
             'characterId': clientId
         };
         for (var i in Server.activeConnections)
-        Server.activeConnections[i].send(JSON.stringify(message));
+            Server.activeConnections[i].send(JSON.stringify(message));
     });
 }
 
-Connection.onMessage = function(message, ws) {
-    var m = JSON.parse(message);
-
-    // find client id
-    var clientId;
-    for (var i in Server.activeConnections) {
-        if (Server.activeConnections[i] == ws) {
-            clientId = i;
-            break;
-        }
-    }
-
-    switch (m.action) {
-        case 'setAction':
-            var character = Scene.characters[clientId];
-            character.currentActions[m.which] = m.value;
-            break;
-        default:
-            console.warn('Received unexpected action');
-    }
+function tick() {
+    setTimeout(tick, 45);
+    updateState();
 }
 
-Connection.tick = function() {
-    setTimeout(Connection.tick, 45);
-    Connection.updateState();
-}
-
-Connection.updateState = function() {
+function updateState() {
     var characterStates = {};
     for (var i in Scene.characters) {
         var character = Scene.characters[i];
-        var state = {};
+        var state: any = {};
         state.bearing = character.bearing;
         state.sphericalPosition = character.sphericalPosition;
         state.altitude = character.altitude;

@@ -1,0 +1,13 @@
+{
+    "include": ["ts/**/*"],
+    "compilerOptions": {
+        "outDir": "js",
+        "module": "NodeNext",
+        "lib": [
+            "ES2021",
+            "DOM"
+        ],
+        "esModuleInterop": true,
+        "moduleResolution": "nodenext"
+    }
+}
