@@ -24,7 +24,7 @@
     "canvas": "^3.1.0",
     "express": "^5.0.2",
     "express-ws": "^5.0.2",
-    "three": "^0.89.0",
+    "three": "^0.137.0",
     "ws": "^8.18.2"
   },
   "devDependencies": {
