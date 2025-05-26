@@ -20,7 +20,7 @@ export const DebugView = {
         camera =
             new THREE.PerspectiveCamera(45, width / height, .1, 100);
         scene.add(camera);
-        camera.position.set(3.5, 0, 0);
+        camera.position.set(3, 0, 0);
         camera.lookAt(0, 0, 0);
 
         renderer = new THREE.WebGLRenderer();
@@ -53,10 +53,10 @@ export const DebugView = {
         const u = 2 * uSquare - 1;
         const v = 2 * vSquare - 1;
         const altitude = Math.log(1 / (sqrUvBounds[2] - sqrUvBounds[0]));
-        const fac = (0.6 + 0.2 * altitude) / Math.sqrt(1 + u * u + v * v);
+        const fac = (0.6 + 0.03 * altitude) / Math.sqrt(1 + u * u + v * v);
         const coords = [fac * u, fac * v, fac];
         const vtx = planet.getUnorientedCoordinates(coords, square);
-        const geometry = new THREE.BoxGeometry(0.02, 0.02, 0.02);
+        const geometry = new THREE.BoxGeometry(0.01, 0.01, 0.01);
         const color = new THREE.Color(1.4 - 0.4 * altitude, 0.2, 0.8);
         const material = new THREE.MeshBasicMaterial({ color: color });
         const model = new THREE.Mesh(geometry, material);
@@ -149,9 +149,9 @@ export const DebugView = {
     },
 
     update() {
-        camAngle += 0.07;
-        camera.position.z = 0.04 * Math.cos(0.45 * camAngle);
-        camera.position.y = 0.04 * Math.sin(camAngle);
+        camAngle += 0.03;
+        camera.position.z = 0.1 * Math.cos(0.45 * camAngle);
+        camera.position.y = 0.1 * Math.sin(camAngle);
         camera.lookAt(0, 0, 0);
         renderer.render(scene, camera);
     }
