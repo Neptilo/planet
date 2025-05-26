@@ -94,7 +94,7 @@ export const Scene = {
             neighbors: [[], [], [], []],
             name: data.name
         };
-        View.makeBlock(child, data.square, data.sqrUvBounds, data.planet, data.name);
+        View.makeBlock(data.square, data.sqrUvBounds, data.planet, data.name);
         Scene.setChild(data.parentNode, data.id, child);
         const curBlock = blockList[data.id];
 

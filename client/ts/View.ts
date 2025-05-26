@@ -165,7 +165,6 @@ export const View = {
 
     // sqrUvBounds = [uMin, vMin, uMax, vMax]
     makeBlock(
-        node: Node,
         square: number[],
         sqrUvBounds: number[],
         planet: Planet,

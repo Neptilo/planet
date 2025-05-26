@@ -43,7 +43,6 @@ export const DebugView = {
     },
 
     makeBlock(
-        node: Node,
         square: number[],
         sqrUvBounds: number[],
         planet: Planet,

@@ -20,14 +20,13 @@ View.init = () => {
 }
 
 View.makeBlock = (
-    node: Node,
     square: number[],
     sqrUvBounds: number[],
     planet: Planet,
     name: string
 ) => {
-    UserView.makeBlock(node, square, sqrUvBounds, planet, name);
-    DebugView.makeBlock(node, square, sqrUvBounds, planet, name);
+    UserView.makeBlock(square, sqrUvBounds, planet, name);
+    DebugView.makeBlock(square, sqrUvBounds, planet, name);
 }
 
 View.addBlock = (block) => {
