@@ -10,7 +10,7 @@ export type CharacterState = CharacterData & {
     currentActions: object;
 };
 
-export const Connection = {
+export const Network = {
     init() {
         Server.setOnConnection(function (ws, _req) {
             onConnection(ws);
@@ -91,7 +91,7 @@ function onConnection(ws: WebSocket) {
     Server.activeConnections[Server.clientNumber++] = ws;
 
     ws.on('message', function (message: string) {
-        Connection.onMessage(message, ws);
+        Network.onMessage(message, ws);
     });
     ws.on('close', function (code: number) {
 

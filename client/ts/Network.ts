@@ -5,7 +5,7 @@ import { Scene, CharacterData} from './scene/Scene.js';
 const wsUri = 'ws://' + window.location.hostname + ':8020';
 let ws: WebSocket;
 
-export const Connection = {
+export const Network = {
     characters: null as CharacterData[],
     clientId: -1,
 
@@ -34,8 +34,8 @@ function onMessage(evt: { data: string; }) {
     const m = JSON.parse(evt.data);
     switch (m.action) {
         case 'acceptConnection':
-            Connection.clientId = m.clientId;
-            Connection.characters = m.characters;
+            Network.clientId = m.clientId;
+            Network.characters = m.characters;
             View.init(); // set up Three.js scene
             Controls.init();
             Scene.init(); // populate scene with objects

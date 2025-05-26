@@ -1,5 +1,5 @@
 import { View } from './View.js';
-import { Connection } from './Connection.js';
+import { Network } from './Network.js';
 
 const characterActions = ['jump', 'left', 'forward', 'right', 'back'];
 
@@ -19,7 +19,7 @@ function sendActionMessage(action: string, on: boolean | string) {
         'which': action,
         'value': on
     };
-    Connection.send(JSON.stringify(message));
+    Network.send(JSON.stringify(message));
 }
 
 function keyToAction(key: string) {

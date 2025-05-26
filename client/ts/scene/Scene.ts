@@ -1,6 +1,6 @@
 import { View } from '../View.js';
 import { Game } from '../Game.js';
-import { Connection } from '../Connection.js';
+import { Network } from '../Network.js';
 import { SphericalPosition } from '../Geom.js';
 import { Planet } from './Planet.js';
 import { Character } from './Character.js';
@@ -48,11 +48,11 @@ export const Scene = {
 
     makeWorld() {
         Scene.objects = [];
-        for (let i in Connection.characters)
-            Scene.createCharacter(i, Connection.characters[i]);
-        Connection.characters = null; // We won't need it anymore.
+        for (let i in Network.characters)
+            Scene.createCharacter(i, Network.characters[i]);
+        Network.characters = null; // We won't need it anymore.
 
-        Scene.player = Scene.objects[Connection.clientId];
+        Scene.player = Scene.objects[Network.clientId];
 
         // calling getSquareUvFromSphericalPosition because the square uvs have not been
         // computed client-side
