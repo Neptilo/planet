@@ -14,8 +14,8 @@ export const DebugView = {
     init(container: HTMLDivElement) {
         scene = new THREE.Scene();
 
-        var width = container.clientWidth;
-        var height = container.clientHeight;
+        const width = container.clientWidth;
+        const height = container.clientHeight;
         camera =
             new THREE.PerspectiveCamera(45, width / height, .1, 100);
         scene.add(camera);
@@ -48,18 +48,18 @@ export const DebugView = {
         planet: Planet,
         name: string
     ) {
-        var uSquare = 0.5 * (sqrUvBounds[0] + sqrUvBounds[2]);
-        var vSquare = 0.5 * (sqrUvBounds[1] + sqrUvBounds[3]);
-        var u = 2 * uSquare - 1;
-        var v = 2 * vSquare - 1;
-        var altitude = Math.log(1 / (sqrUvBounds[2] - sqrUvBounds[0]));
-        var fac = (0.6 + 0.2 * altitude) / Math.sqrt(1 + u * u + v * v);
-        var coords = [fac * u, fac * v, fac];
-        var vtx = planet.getUnorientedCoordinates(coords, square);
-        var geometry = new THREE.BoxGeometry(0.02, 0.02, 0.02);
-        var color = new THREE.Color(1.4 - 0.4 * altitude, 0.2, 0.8);
-        var material = new THREE.MeshBasicMaterial({ color: color });
-        var model = new THREE.Mesh(geometry, material);
+        const uSquare = 0.5 * (sqrUvBounds[0] + sqrUvBounds[2]);
+        const vSquare = 0.5 * (sqrUvBounds[1] + sqrUvBounds[3]);
+        const u = 2 * uSquare - 1;
+        const v = 2 * vSquare - 1;
+        const altitude = Math.log(1 / (sqrUvBounds[2] - sqrUvBounds[0]));
+        const fac = (0.6 + 0.2 * altitude) / Math.sqrt(1 + u * u + v * v);
+        const coords = [fac * u, fac * v, fac];
+        const vtx = planet.getUnorientedCoordinates(coords, square);
+        const geometry = new THREE.BoxGeometry(0.02, 0.02, 0.02);
+        const color = new THREE.Color(1.4 - 0.4 * altitude, 0.2, 0.8);
+        const material = new THREE.MeshBasicMaterial({ color: color });
+        const model = new THREE.Mesh(geometry, material);
         model.name = name;
         model.position.set(vtx[0], vtx[1], vtx[2]);
         nodeToMeshMap.set(name, model);
@@ -71,14 +71,14 @@ export const DebugView = {
 
     addNeighbors(node: Node, neighbors: Node[]) {
         const nodeMesh = nodeToMeshMap.get(node.name);
-        for (var iNei = 0; iNei < neighbors.length; ++iNei) {
-            var neighbor = neighbors[iNei];
+        for (let iNei = 0; iNei < neighbors.length; ++iNei) {
+            const neighbor = neighbors[iNei];
             const neighborMesh = nodeToMeshMap.get(neighbor.name);
-            var posDiff = neighborMesh.position.clone().sub(nodeMesh.position);
-            var geometry = new THREE.Geometry();
+            const posDiff = neighborMesh.position.clone().sub(nodeMesh.position);
+            const geometry = new THREE.Geometry();
             geometry.vertices.push(new THREE.Vector3(), posDiff.multiplyScalar(.5));
-            var material = new THREE.LineBasicMaterial({ color: 0xFF0000 });
-            var line = new THREE.Line(geometry, material);
+            const material = new THREE.LineBasicMaterial({ color: 0xFF0000 });
+            const line = new THREE.Line(geometry, material);
             line.name = 'n' + neighbor.name; // to find it later
             nodeMesh.add(line);
         }
@@ -87,9 +87,9 @@ export const DebugView = {
     removeNeighbors(node: Node, neighbors: Node[]) {
         if (!neighbors) return;
         const nodeMesh = nodeToMeshMap.get(node.name);
-        for (var iNei = 0; iNei < neighbors.length; ++iNei) {
-            var neighbor = neighbors[iNei];
-            var toRemove = nodeMesh.getObjectByName('n' + neighbor.name);
+        for (let iNei = 0; iNei < neighbors.length; ++iNei) {
+            const neighbor = neighbors[iNei];
+            const toRemove = nodeMesh.getObjectByName('n' + neighbor.name);
             if (!toRemove) continue;
             nodeMesh.remove(toRemove);
         }
@@ -102,11 +102,11 @@ export const DebugView = {
             console.error('Mesh to add a child to was not found');
             return;
         }
-        var posDiff = nodeToMeshMap.get(child.name).position.clone().sub(nodeMesh.position);
-        var geometry = new THREE.Geometry();
+        const posDiff = nodeToMeshMap.get(child.name).position.clone().sub(nodeMesh.position);
+        const geometry = new THREE.Geometry();
         geometry.vertices.push(new THREE.Vector3(), posDiff);
-        var material = new THREE.LineBasicMaterial({ color: 0x00FF00 });
-        var line = new THREE.Line(geometry, material);
+        const material = new THREE.LineBasicMaterial({ color: 0x00FF00 });
+        const line = new THREE.Line(geometry, material);
         line.name = 'c' + child.name; // to find it later
         nodeMesh.add(line);
     },
@@ -118,7 +118,7 @@ export const DebugView = {
             console.error('Mesh to remove was not found');
             return;
         }
-        var toRemove = nodeMesh.getObjectByName('c' + child.name);
+        const toRemove = nodeMesh.getObjectByName('c' + child.name);
         if (!toRemove) return;
         nodeMesh.remove(toRemove);
     },

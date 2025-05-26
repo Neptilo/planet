@@ -60,8 +60,8 @@ export const View = {
 
         scene = new THREE.Scene();
 
-        var width = container.clientWidth;
-        var height = container.clientHeight;
+        const width = container.clientWidth;
+        const height = container.clientHeight;
         View.camera = new PlayerCamera(width, height);
 
         renderer = new THREE.WebGLRenderer();
@@ -102,26 +102,26 @@ export const View = {
         // neighbors with lower LOD.
         // iBuf and jBuf define which special borders to use
         blockFaceBuffers = [];
-        var segments = blockSegments;
-        for (var iBuf = 0; iBuf < 3; iBuf++) {
+        const segments = blockSegments;
+        for (let iBuf = 0; iBuf < 3; iBuf++) {
             // 0 means left, 1 none, 2 right
 
-            var bufs: THREE.Face3[][] = [];
-            for (var jBuf = 0; jBuf < 3; jBuf++) {
+            const bufs: THREE.Face3[][] = [];
+            for (let jBuf = 0; jBuf < 3; jBuf++) {
                 // 0 means bottom, 1 none, 2 top
 
-                var buf: THREE.Face3[] = [];
+                const buf: THREE.Face3[] = [];
 
                 // if true, the square is split along the first diagonal: /
                 // if false, along the second diagonal: \
-                var even = true;
+                let even = true;
 
-                for (var iFace = 0; iFace < segments; iFace++) {
-                    for (var jFace = 0; jFace < segments; jFace++) {
-                        var decimateLeft = iFace == 0 && iBuf == 0;
-                        var decimateRight = iFace == segments - 1 && iBuf == 2;
-                        var decimateBottom = jFace == 0 && jBuf == 0;
-                        var decimateTop = jFace == segments - 1 && jBuf == 2;
+                for (let iFace = 0; iFace < segments; iFace++) {
+                    for (let jFace = 0; jFace < segments; jFace++) {
+                        const decimateLeft = iFace == 0 && iBuf == 0;
+                        const decimateRight = iFace == segments - 1 && iBuf == 2;
+                        const decimateBottom = jFace == 0 && jBuf == 0;
+                        const decimateTop = jFace == segments - 1 && jBuf == 2;
                         if (even) {
                             if (!decimateRight)
                                 buf.push(new THREE.Face3(
@@ -169,47 +169,47 @@ export const View = {
         planet: Planet,
         name: string
     ) {
-        var geometry = new THREE.Geometry();
-        var segments = blockSegments;
-        var uExtent = sqrUvBounds[2] - sqrUvBounds[0];
-        var vExtent = sqrUvBounds[3] - sqrUvBounds[1];
+        const geometry = new THREE.Geometry();
+        const segments = blockSegments;
+        const uExtent = sqrUvBounds[2] - sqrUvBounds[0];
+        const vExtent = sqrUvBounds[3] - sqrUvBounds[1];
 
         // jailbreak THREE.Geometry to store custom vertexUvs buffer
         geometry['vertexUvs'] = [];
 
         // vertices and their texture UVs
-        var debug = false;
-        for (var iVert = 0; iVert <= segments; iVert++) {
-            var uSquare = sqrUvBounds[0] + uExtent * iVert / segments;
-            var u = 2 * uSquare - 1;
-            for (var jVert = 0; jVert <= segments; jVert++) {
+        const debug = false;
+        for (let iVert = 0; iVert <= segments; iVert++) {
+            let uSquare = sqrUvBounds[0] + uExtent * iVert / segments;
+            const u = 2 * uSquare - 1;
+            for (let jVert = 0; jVert <= segments; jVert++) {
 
                 // vertex
-                var vSquare = sqrUvBounds[1] + vExtent * jVert / segments;
-                var v = 2 * vSquare - 1;
-                var altitude = Game.getAltitudeFromUv(
+                let vSquare = sqrUvBounds[1] + vExtent * jVert / segments;
+                const v = 2 * vSquare - 1;
+                const altitude = Game.getAltitudeFromUv(
                     [uSquare, vSquare], [square[0], square[1]], planet);
-                var fac = (planet.radius + altitude) / Math.sqrt(1 + u * u + v * v);
-                var coords = [fac * u, fac * v, fac];
-                var vtx = planet.getUnorientedCoordinates(coords, square);
+                const fac = (planet.radius + altitude) / Math.sqrt(1 + u * u + v * v);
+                const coords = [fac * u, fac * v, fac];
+                const vtx = planet.getUnorientedCoordinates(coords, square);
                 geometry.vertices.push(new THREE.Vector3(vtx[0], vtx[1], vtx[2]));
 
                 // UV
-                var uSquareTmp: number;
+                let uSquareTmp: number;
                 if (debug) {
                     uSquareTmp = uSquare;
                     uSquare = iVert / segments;
                     vSquare = jVert / segments;
                 }
-                var uTex = (square[0] + uSquare) / 3;
-                var vTex = (square[1] + vSquare) / 2;
+                const uTex = (square[0] + uSquare) / 3;
+                const vTex = (square[1] + vSquare) / 2;
                 if (debug) uSquare = uSquareTmp;
                 geometry['vertexUvs'].push(new THREE.Vector2(uTex, vTex));
             }
         }
 
         // faces
-        var defaultFaceBuffer = blockFaceBuffers[1][1];
+        const defaultFaceBuffer = blockFaceBuffers[1][1];
         geometry.faces = new Array(defaultFaceBuffer.length);
         for (let i in defaultFaceBuffer) {
             geometry.faces[i] = defaultFaceBuffer[i].clone();
@@ -222,7 +222,7 @@ export const View = {
         computeVertexNormals(geometry);
         updateFaceVertexNormals(geometry);
 
-        var model = new THREE.Mesh(geometry, planet.material.clone());
+        const model = new THREE.Mesh(geometry, planet.material.clone());
         model.receiveShadow = true;
         model.castShadow = true;
         model.name = name;
@@ -235,11 +235,11 @@ export const View = {
 
     updateBlockFaceBuffer(block: Node) {
         let mesh = nodeToMeshMap.get(block.name);
-        var geometry = mesh.geometry as THREE.Geometry;
+        const geometry = mesh.geometry as THREE.Geometry;
 
         // copy face buffer from the appropriate face buffer template
-        var fbi = block.faceBufferInd;
-        var faceBuffer = blockFaceBuffers[fbi[0]][fbi[1]];
+        const fbi = block.faceBufferInd;
+        const faceBuffer = blockFaceBuffers[fbi[0]][fbi[1]];
         geometry.faces = new Array(faceBuffer.length);
         for (let i in faceBuffer)
             geometry.faces[i] = faceBuffer[i].clone();
@@ -251,10 +251,10 @@ export const View = {
     },
 
     addCharacter(width: number, height: number) {
-        var geometry = new THREE.PlaneGeometry(width, height);
-        var widthRatio = 254 / 256;
-        var heightRatio = 640 / 1024;
-        var uvs: THREE.Vector2[] = [];
+        const geometry = new THREE.PlaneGeometry(width, height);
+        const widthRatio = 254 / 256;
+        const heightRatio = 640 / 1024;
+        const uvs: THREE.Vector2[] = [];
         uvs.push(new THREE.Vector2(widthRatio, 0));
         uvs.push(new THREE.Vector2(0, 0));
         uvs.push(new THREE.Vector2(0, heightRatio));
@@ -262,15 +262,15 @@ export const View = {
         geometry.faceVertexUvs[0] = [];
         geometry.faceVertexUvs[0].push([uvs[2], uvs[1], uvs[3]]);
         geometry.faceVertexUvs[0].push([uvs[1], uvs[0], uvs[3]]);
-        var texture = new THREE.TextureLoader().load("img/man.png");
-        var material = new THREE.MeshPhongMaterial({ map: texture });
+        const texture = new THREE.TextureLoader().load("img/man.png");
+        const material = new THREE.MeshPhongMaterial({ map: texture });
         material.alphaTest = .9;
         material.side = THREE.DoubleSide;
-        var model = new THREE.Mesh(geometry, material);
+        const model = new THREE.Mesh(geometry, material);
         model.receiveShadow = true;
-        var boxGeometry = new THREE.BoxGeometry(width / 2, height, .1);
-        var invisibleMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 });
-        var box = new THREE.Mesh(boxGeometry, invisibleMaterial);
+        const boxGeometry = new THREE.BoxGeometry(width / 2, height, .1);
+        const invisibleMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 });
+        const box = new THREE.Mesh(boxGeometry, invisibleMaterial);
         model.add(box);
         box.castShadow = true;
         model.rotation.order = 'ZXY';
@@ -280,18 +280,18 @@ export const View = {
 
     makeBalloon(text: string, character: Character) {
         // constants
-        var defAspectRatio = 4 / 3;
-        var fontSize = 50; // in px, when drawing on the texture
-        var margin = 30;
-        var textureWidth = 1024; // texture dimensions must be powers of two
-        var textureHeight = 512;
+        const defAspectRatio = 4 / 3;
+        const fontSize = 50; // in px, when drawing on the texture
+        const margin = 30;
+        const textureWidth = 1024; // texture dimensions must be powers of two
+        const textureHeight = 512;
 
         // image where we will render the text
-        var img: HTMLImageElement & { customData?: BalloonImgData } = new Image();
+        const img: HTMLImageElement & { customData?: BalloonImgData } = new Image();
         img.customData = {};
 
         // prepare HTML paragraph with multiline text
-        var paragraph = document.createElement('p');
+        const paragraph = document.createElement('p');
         paragraph.style.width = String(textureWidth - 2 * margin) + 'px';
         paragraph.style.font = String(fontSize) + 'px sans-serif';
         paragraph.style.margin = String(margin) + 'px';
@@ -299,7 +299,7 @@ export const View = {
         paragraph.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
 
         // wrap the text inside a span to be able to measure its real size
-        var span = document.createElement('span');
+        const span = document.createElement('span');
         paragraph.appendChild(span);
         span.innerText = text;
 
@@ -326,7 +326,7 @@ export const View = {
         img.customData.canvas.height = textureHeight;
         img.customData.character = character;
 
-        var data =
+        const data =
             '<svg xmlns="http://www.w3.org/2000/svg" ' +
             'width="' + textureWidth + '" ' +
             'height="' + textureHeight + '">' +
@@ -357,8 +357,8 @@ export const View = {
     },
 
     update() {
-        for (var i in Scene.objects) {
-            var character = Scene.objects[i];
+        for (let i in Scene.objects) {
+            const character = Scene.objects[i];
 
             // +.5 for each coordinate because of the way of constructing the planet
             // should be removed afterwards
@@ -386,25 +386,20 @@ export const View = {
                 character.balloonModel.rotation.x = pivot.rotation.x;
 
                 // calculate distance between character and player
-                var charDist =
+                const charDist =
                     character.model.position.distanceTo(Scene.player.model.position);
 
                 // distance value for which the maximum alpha is reached
-                var dDef = PlayerCamera.defaultDistance;
-                var dNear = 1; // minimum distance for which a balloon is still visible
-                var dFar = 12; // maximum distance for which a balloon is still visible
-                var d = charDist + View.camera!.distance;
+                const dDef = PlayerCamera.defaultDistance;
+                const dNear = 1; // minimum distance for which a balloon is still visible
+                const dFar = 12; // maximum distance for which a balloon is still visible
+                const d = charDist + View.camera!.distance;
 
                 // This formula yields an opacity of balloonAlphaMax when d == dDef,
                 // and a null opacity when d == dNear or dFar
                 // So balloons are more transparent when too close or too far from camera
-                var dLim: number;
-                if (d <= dDef) {
-                    dLim = dNear;
-                } else {
-                    dLim = dFar;
-                }
-                var deltaRatio = (d - dDef) / (dLim - dDef);
+                const dLim = d <= dDef ? dNear : dFar;
+                const deltaRatio = (d - dDef) / (dLim - dDef);
                 (character.balloonModel.material as THREE.Material).opacity =
                     balloonAlphaMax * (1 - deltaRatio * deltaRatio);
             }
@@ -428,10 +423,10 @@ export const View = {
 // update geometry.faceVertexUvs[0] from the custom geometry.vertexUvs
 function updateFaceVertexUvs(geometry: THREE.Geometry) {
     geometry.faceVertexUvs[0] = new Array(geometry.faces.length);
-    var uvs = geometry['vertexUvs'];
-    for (var iFace in geometry.faces) {
-        var face = geometry.faces[iFace];
-        var faceUvs = [
+    const uvs = geometry['vertexUvs'];
+    for (let iFace in geometry.faces) {
+        const face = geometry.faces[iFace];
+        const faceUvs = [
             uvs[face.a],
             uvs[face.b],
             uvs[face.c]];
@@ -443,17 +438,17 @@ function updateFaceVertexUvs(geometry: THREE.Geometry) {
 // and store them in a custom vertexNormals buffer
 function computeVertexNormals(geometry: THREE.Geometry) {
     geometry['vertexNormals'] = new Array(geometry.vertices.length);
-    var vn = geometry['vertexNormals'];
-    for (var v in geometry.vertices) vn[v] = new THREE.Vector3();
+    const vn = geometry['vertexNormals'];
+    for (let v in geometry.vertices) vn[v] = new THREE.Vector3();
 
     // vertex normals weighted by triangle areas
     // http://www.iquilezles.org/www/articles/normals/normals.htm
-    var cb = new THREE.Vector3(), ab = new THREE.Vector3();
-    for (var f in geometry.faces) {
-        var face = geometry.faces[f];
-        var vA = geometry.vertices[face.a];
-        var vB = geometry.vertices[face.b];
-        var vC = geometry.vertices[face.c];
+    const cb = new THREE.Vector3(), ab = new THREE.Vector3();
+    for (let f in geometry.faces) {
+        const face = geometry.faces[f];
+        const vA = geometry.vertices[face.a];
+        const vB = geometry.vertices[face.b];
+        const vC = geometry.vertices[face.c];
         cb.subVectors(vC, vB);
         ab.subVectors(vA, vB);
         cb.cross(ab);
@@ -462,16 +457,16 @@ function computeVertexNormals(geometry: THREE.Geometry) {
         vn[face.c].add(cb);
     }
 
-    for (var v in geometry.vertices) vn[v].normalize();
+    for (let v in geometry.vertices) vn[v].normalize();
 }
 
 // update the vertexNormals buffers stored in each face of geometry
 // from the custom geometry['vertexNormals']
 function updateFaceVertexNormals(geometry: THREE.Geometry) {
-    var vn = geometry['vertexNormals'];
-    for (var f in geometry.faces) {
-        var face = geometry.faces[f];
-        var fvn = face['vertexNormals'];
+    const vn = geometry['vertexNormals'];
+    for (let f in geometry.faces) {
+        const face = geometry.faces[f];
+        const fvn = face['vertexNormals'];
         fvn[0] = vn[face.a];
         fvn[1] = vn[face.b];
         fvn[2] = vn[face.c];
@@ -481,10 +476,10 @@ function updateFaceVertexNormals(geometry: THREE.Geometry) {
 
 function onBalloonImgLoad() {
     const that = this as HTMLImageElement & { customData?: BalloonImgData };
-    var data = that.customData;
-    var ctx = data.canvas.getContext('2d');
-    var textureWidth = data.canvas.width;
-    var textureHeight = data.canvas.height;
+    const data = that.customData;
+    const ctx = data.canvas.getContext('2d');
+    const textureWidth = data.canvas.width;
+    const textureHeight = data.canvas.height;
 
     // fill texture background with an extra margin everywhere possible
     // to avoid visible borders
@@ -497,14 +492,14 @@ function onBalloonImgLoad() {
 
     ctx.drawImage(that, 0, 0);
 
-    var texture = new THREE.Texture(data.canvas);
+    const texture = new THREE.Texture(data.canvas);
     texture.needsUpdate = true;
 
     // build geometry
-    var geometry = new THREE.BufferGeometry();
-    var balloonWidth = 0.023 * data.usedTextureWidth;
-    var balloonHeight = 0.023 * data.usedTextureHeight;
-    var vertices = new Float32Array([
+    const geometry = new THREE.BufferGeometry();
+    const balloonWidth = 0.023 * data.usedTextureWidth;
+    const balloonHeight = 0.023 * data.usedTextureHeight;
+    const vertices = new Float32Array([
         // tail of the balloon
         0, 0, 0,
         1, 1, 0,
@@ -518,14 +513,14 @@ function onBalloonImgLoad() {
         -balloonWidth / 2, 1, 0,
         balloonWidth / 2, 1, 0
     ]);
-    var uWidth = data.usedTextureWidth / textureWidth;
-    var vHeight = data.usedTextureHeight / textureHeight;
-    var uMin = 0.5 * (1 - uWidth);
-    var uMax = 0.5 * (1 + uWidth);
-    var uMarginWidth = data.margin / textureWidth;
-    var vMin = 1 - vHeight;
-    var vMarginHeight = data.margin / textureHeight;
-    var textureCoordinates = new Float32Array([
+    const uWidth = data.usedTextureWidth / textureWidth;
+    const vHeight = data.usedTextureHeight / textureHeight;
+    const uMin = 0.5 * (1 - uWidth);
+    const uMax = 0.5 * (1 + uWidth);
+    const uMarginWidth = data.margin / textureWidth;
+    const vMin = 1 - vHeight;
+    const vMarginHeight = data.margin / textureHeight;
+    const textureCoordinates = new Float32Array([
         // for the tail of the balloon, take color from margin where there is no text
         0.5, 1 - vMarginHeight, 0.5 + uMarginWidth, 1, 0.5, 1,
         uMax, vMin, uMax, 1, uMin, 1,
@@ -535,7 +530,7 @@ function onBalloonImgLoad() {
     geometry.addAttribute('uv', new THREE.BufferAttribute(textureCoordinates, 2));
 
     // build material
-    var material = new THREE.MeshBasicMaterial({
+    const material = new THREE.MeshBasicMaterial({
         map: texture,
         transparent: true,
         opacity: balloonAlphaMax
@@ -546,7 +541,7 @@ function onBalloonImgLoad() {
 
     data.character.balloonModel = new THREE.Mesh(geometry, material);
     data.character.balloonModel.rotation.order = 'YXZ';
-    var balloonScale = data.character.balloonModel.scale;
+    const balloonScale = data.character.balloonModel.scale;
     balloonScale.x = balloonScale.y = balloonScale.z = 0.12;
     data.character.balloonModel.position.y = 0.5 + 0.3 * balloonScale.x;
 

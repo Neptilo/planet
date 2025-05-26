@@ -31,7 +31,7 @@ function onClose(_evt: CloseEvent) {
 }
 
 function onMessage(evt: { data: string; }) {
-    var m = JSON.parse(evt.data);
+    const m = JSON.parse(evt.data);
     switch (m.action) {
         case 'acceptConnection':
             Connection.clientId = m.clientId;
@@ -54,9 +54,9 @@ function onMessage(evt: { data: string; }) {
             break;
         case 'updateState':
             if (Scene.objects != undefined) {
-                for (var i in m.characterStates) {
-                    var character = Scene.objects[i];
-                    var state = m.characterStates[i];
+                for (let i in m.characterStates) {
+                    const character = Scene.objects[i];
+                    const state = m.characterStates[i];
                     character.bearing = state.bearing;
                     character.sphericalPosition = state.sphericalPosition;
                     character.altitude = state.altitude;

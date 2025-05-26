@@ -13,32 +13,32 @@ export const Game = {
     },
 
     getAltitudeFromUv(uvSquare: number[], square: number[], planet: Planet) {
-        var xTex = Math.round((planet.altitudeMap.width - 1) * (square[0] + uvSquare[0]) / 3);
-        var yTex = Math.round((planet.altitudeMap.height / 2 - 1) * (1 - uvSquare[1]));
+        let xTex = Math.round((planet.altitudeMap.width - 1) * (square[0] + uvSquare[0]) / 3);
+        let yTex = Math.round((planet.altitudeMap.height / 2 - 1) * (1 - uvSquare[1]));
         if (square[1] == 0) yTex += planet.altitudeMap.height / 2;
-        var altitudePix = planet.altitudeMap.data[planet.altitudeMap.width * yTex + xTex];
+        const altitudePix = planet.altitudeMap.data[planet.altitudeMap.width * yTex + xTex];
         return planet.minAltitude + (planet.maxAltitude - planet.minAltitude) * altitudePix / 255;
     },
 
     getSquareUvFromSphericalPosition(theta: number, phi: number, planet: Planet) {
-        var newCoords: number[] = []; // normalized coordinates
+        const newCoords: number[] = []; // normalized coordinates
         newCoords[0] = Math.sin(theta) * Math.sin(phi);
         newCoords[1] = -Math.sin(theta) * Math.cos(phi);
         newCoords[2] = Math.cos(theta);
         // find biggest coordinate
-        var wInd = 0;
-        var w = 0;
-        for (var i = 0; i < 3; i++) {
+        let wInd = 0;
+        let w = 0;
+        for (let i = 0; i < 3; i++) {
             if (Math.abs(newCoords[i]) > Math.abs(w)) {
                 w = newCoords[i];
                 wInd = i;
             }
         }
-        var square = planet.squareInds[wInd][Number(w >= 0)];
-        var vInd = square[1]; // magic trick
-        var v = newCoords[vInd] / Math.abs(w);
-        var uInd = 3 - wInd - vInd; // the remaining coordinate
-        var u = planet.uSigns[square[0]][square[1]] * newCoords[uInd] / Math.abs(w);
+        const square = planet.squareInds[wInd][Number(w >= 0)];
+        const vInd = square[1]; // magic trick
+        const v = newCoords[vInd] / Math.abs(w);
+        const uInd = 3 - wInd - vInd; // the remaining coordinate
+        const u = planet.uSigns[square[0]][square[1]] * newCoords[uInd] / Math.abs(w);
         return {
             'uv': [(u + 1) / 2, (v + 1) / 2],
             'square': square
@@ -47,7 +47,7 @@ export const Game = {
 
     // better not call this and call getAltitudeFromUv directly if squareUv is available
     getAltitudeFromSphericalPosition(theta: number, phi: number, planet: Planet) {
-        var squareUv = Game.getSquareUvFromSphericalPosition(theta, phi, planet);
+        const squareUv = Game.getSquareUvFromSphericalPosition(theta, phi, planet);
         return Game.getAltitudeFromUv(squareUv.uv, squareUv.square, planet);
     },
 
@@ -58,9 +58,9 @@ export const Game = {
 
 function tick() {
     requestAnimationFrame(tick);
-    var timeNow = new Date().getTime();
+    const timeNow = new Date().getTime();
     if (lastTime != 0) {
-        var deltaTime = timeNow - lastTime;
+        const deltaTime = timeNow - lastTime;
         moveObjects(deltaTime, Scene.planet);
         // update the terrain
         // but don't add more work if there's already a lot
@@ -76,11 +76,11 @@ function tick() {
     // run scheduled tasks
     if (Game.taskList.length) {
         // even if we don't have time, do at least one task
-        var task = Game.taskList.shift();
+        const task = Game.taskList.shift();
         task.handler(task.data);
     }
     while (Game.taskList.length && new Date().getTime() - lastTime < 15) {
-        var task = Game.taskList.shift();
+        const task = Game.taskList.shift();
         task.handler(task.data);
     }
 }
@@ -92,14 +92,14 @@ function tick() {
 // and given an initial bearing
 // and a distance to go through
 function getNewSphericalPostion(sphericalPosition: SphericalPosition, bearing: number, distance: number) {
-    var th = sphericalPosition.theta;
-    var b = bearing;
-    var d = distance / sphericalPosition.rho;
-    var newTheta = Math.acos(Math.cos(th) * Math.cos(d) + Math.sin(th) * Math.sin(d) * Math.cos(b));
-    var newPhi = sphericalPosition.phi + Math.atan2(
+    const th = sphericalPosition.theta;
+    const b = bearing;
+    const d = distance / sphericalPosition.rho;
+    const newTheta = Math.acos(Math.cos(th) * Math.cos(d) + Math.sin(th) * Math.sin(d) * Math.cos(b));
+    const newPhi = sphericalPosition.phi + Math.atan2(
         Math.sin(b) * Math.sin(d) * Math.sin(th),
         Math.cos(d) - Math.cos(th) * Math.cos(newTheta));
-    var newBearing: number;
+    let newBearing: number;
     if (d >= 0)
         newBearing = Math.atan2(
             Math.sin(b) * Math.sin(d) * Math.sin(th),
@@ -117,26 +117,26 @@ function getNewSphericalPostion(sphericalPosition: SphericalPosition, bearing: n
 
 // better not call this and call getBlockIndFromUv directly if squareUv is available
 function getBlockIndFromSphericalPosition(theta: number, phi: number, planet: Planet) {
-    var squareUv = Game.getSquareUvFromSphericalPosition(theta, phi, planet);
+    const squareUv = Game.getSquareUvFromSphericalPosition(theta, phi, planet);
     return Game.getBlockIndFromUv(squareUv.uv, planet)
 }
 
 function moveObjects(deltaTime: number, planet: Planet) {
-    var characters = Scene.objects;
-    for (var i in characters)
+    const characters = Scene.objects;
+    for (let i in characters)
         moveObject(characters[i], deltaTime, planet);
 }
 
 function updateTerrain(player: Character, planet: Planet) {
-    var sphericalPos = player.sphericalPosition;
-    var squareUv = Game.getSquareUvFromSphericalPosition(
+    const sphericalPos = player.sphericalPosition;
+    const squareUv = Game.getSquareUvFromSphericalPosition(
         sphericalPos.theta, sphericalPos.phi, planet);
     planet.updateTerrain(squareUv.uv, squareUv.square);
 }
 
 function applyGravity(deltaTime: number, planet: Planet) {
-    var objects = Scene.objects;
-    for (var i in objects)
+    const objects = Scene.objects;
+    for (let i in objects)
         objects[i].velocity[1] -= deltaTime * planet.gravity;
 }
 
@@ -148,7 +148,7 @@ function moveObject(object: Character, deltaTime: number, planet: Planet) {
     if (object.altitude <= object.groundAltitude) {
         // touching the ground: apply actions
         object.velocity[0] = 0;
-        var actions = object.currentActions;
+        const actions = object.currentActions;
         if (actions['jump'])
             object.velocity[1] = object.jumpSpeed;
         if (actions['left'])
@@ -160,22 +160,22 @@ function moveObject(object: Character, deltaTime: number, planet: Planet) {
         if (actions['back'])
             object.velocity[0] -= object.speed;
     } // else in the air: free fall
-    var hd = deltaTime * object.velocity[0],
+    const hd = deltaTime * object.velocity[0],
         vd = deltaTime * object.velocity[1];
     if (hd != 0) {
-        var sphericalPosition = {
+        const sphericalPosition = {
             'theta': object.sphericalPosition.theta,
             'phi': object.sphericalPosition.phi,
             'rho': planet.radius + object.altitude
         }
-        var newSphericalPosition = getNewSphericalPostion(
+        const newSphericalPosition = getNewSphericalPostion(
             sphericalPosition, object.bearing, hd);
-        var newTheta = newSphericalPosition.theta;
-        var newPhi = newSphericalPosition.phi;
-        var newBearing = newSphericalPosition.bearing;
-        var newSquareUv = Game.getSquareUvFromSphericalPosition(
+        const newTheta = newSphericalPosition.theta;
+        const newPhi = newSphericalPosition.phi;
+        const newBearing = newSphericalPosition.bearing;
+        const newSquareUv = Game.getSquareUvFromSphericalPosition(
             newTheta, newPhi, planet);
-        var newGroundAltitude = Game.getAltitudeFromUv(
+        const newGroundAltitude = Game.getAltitudeFromUv(
             newSquareUv.uv, newSquareUv.square, planet);
         if ((newGroundAltitude - object.altitude) / Math.abs(hd) <= slopeThreshold) {
             object.sphericalPosition.theta = newTheta;

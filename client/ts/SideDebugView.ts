@@ -5,8 +5,8 @@ import { Node, Planet } from './Scene.js'
 export const UserView = { ...View };
 
 View.init = function () {
-    var userView = document.createElement('div');
-    var debugView = document.createElement('div');
+    const userView = document.createElement('div');
+    const debugView = document.createElement('div');
     userView.style.height = '100%';
     userView.style.flex = '50%';
     debugView.style.height = '100%';
@@ -39,15 +39,15 @@ View.updateBlockFaceBuffer = function (block) {
 }
 
 View['addNeighbors'] = function (node: Node, neighbors: Node[]) {
-    var debugNeighbors: Node[] = [];
-    for (var iNei = 0; iNei < neighbors.length; ++iNei)
+    const debugNeighbors: Node[] = [];
+    for (let iNei = 0; iNei < neighbors.length; ++iNei)
         debugNeighbors.push(neighbors[iNei]);
     DebugView.addNeighbors(node, debugNeighbors);
 }
 
 View['removeNeighbors'] = function (node: Node, neighbors: Node[]) {
-    var debugNeighbors: Node[] = [];
-    for (var iNei = 0; iNei < neighbors.length; ++iNei)
+    const debugNeighbors: Node[] = [];
+    for (let iNei = 0; iNei < neighbors.length; ++iNei)
         debugNeighbors.push(neighbors[iNei]);
     DebugView.removeNeighbors(node, debugNeighbors);
 }

@@ -73,8 +73,8 @@ export class Planet {
 
     constructor() {
         // altitude
-        var planet = this;
-        var img = new Image;
+        const planet = this;
+        const img = new Image;
         img.onload = () => {
             planet.setAltitudeMap(img);
             Scene.makeWorld(); // populate scene with objects and update terrain
@@ -82,59 +82,59 @@ export class Planet {
         img.src = 'img/altitude.png';
 
         // view: material
-        var diffuseTexture = new THREE.TextureLoader().load("img/map.png");
+        const diffuseTexture = new THREE.TextureLoader().load("img/map.png");
         this.material = new THREE.MeshBasicMaterial({ map: diffuseTexture });
     }
 
     setAltitudeMap(img: HTMLImageElement) {
-        var canvas = document.createElement('canvas');
+        const canvas = document.createElement('canvas');
         canvas.width = img.width;
         canvas.height = img.height;
-        var ctx = canvas.getContext('2d')!;
+        const ctx = canvas.getContext('2d')!;
         ctx.drawImage(img, 0, 0);
         this.altitudeMap.width = img.width;
         this.altitudeMap.height = img.height;
 
         // copy only red channel of img into altitudeMap
-        var imgData = ctx.getImageData(0, 0, img.width, img.height).data;
+        const imgData = ctx.getImageData(0, 0, img.width, img.height).data;
         this.altitudeMap.data = [];
-        for (var i = 0; i < imgData.length / 4; i++) {
+        for (let i = 0; i < imgData.length / 4; i++) {
             this.altitudeMap.data[i] = imgData[4 * i];
         }
     }
 
     updateTerrain(uv: number[], square: number[]) {
-        var blockInd = Game.getBlockIndFromUv(uv, this);
+        const blockInd = Game.getBlockIndFromUv(uv, this);
 
         // unload far away blocks
         let id: number;
         // @ts-ignore I know my key is a number
         for (id in this.blocks) {
-            var j = id % this.blocksPerSide;
-            var tmp = (id - j) / this.blocksPerSide;
-            var i = tmp % this.blocksPerSide;
+            const j = id % this.blocksPerSide;
+            let tmp = (id - j) / this.blocksPerSide;
+            const i = tmp % this.blocksPerSide;
             tmp = (tmp - i) / this.blocksPerSide;
-            var jSquare = tmp % 2;
-            var iSquare = (tmp - jSquare) / 2;
-            var d = this.blockDistance(blockInd, square, [i, j], [iSquare, jSquare]);
+            const jSquare = tmp % 2;
+            const iSquare = (tmp - jSquare) / 2;
+            const d = this.blockDistance(blockInd, square, [i, j], [iSquare, jSquare]);
             if (d > this.blockUnloadDistance)
                 this.terrainVisitor.deleteBlockNode(null, id, id + '/');
         }
 
         // load all blocks within a radius of blockLoadDistance
-        for (var i = -this.blockLoadDistance; i <= this.blockLoadDistance; i++) {
-            for (var j = -this.blockLoadDistance; j <= this.blockLoadDistance; j++) {
-                var indSquare = this.blockAdd(blockInd, square, [i, j]);
+        for (let i = -this.blockLoadDistance; i <= this.blockLoadDistance; i++) {
+            for (let j = -this.blockLoadDistance; j <= this.blockLoadDistance; j++) {
+                const indSquare = this.blockAdd(blockInd, square, [i, j]);
                 if (indSquare == null)
                     continue;
-                var ind = indSquare[0];
-                var sqr = indSquare[1];
+                const ind = indSquare[0];
+                const sqr = indSquare[1];
                 id = this.getBlockIdFromInd(ind, sqr);
                 if (this.blocks[id] != undefined)
                     continue; // block already exists
 
                 // schedule block creation after render
-                var sqrUvBounds = [
+                const sqrUvBounds = [
                     ind[0] / this.blocksPerSide, ind[1] / this.blocksPerSide,
                     (ind[0] + 1) / this.blocksPerSide, (ind[1] + 1) / this.blocksPerSide
                 ];
@@ -147,14 +147,14 @@ export class Planet {
         this.terrainVisitor.uv = uv;
         // @ts-ignore I know my key is a number
         for (id in this.blocks) {
-            var node = this.blocks[id];
-            var j = id % this.blocksPerSide;
-            var tmp = (id - j) / this.blocksPerSide;
-            var i = tmp % this.blocksPerSide;
+            const node = this.blocks[id];
+            const j = id % this.blocksPerSide;
+            let tmp = (id - j) / this.blocksPerSide;
+            const i = tmp % this.blocksPerSide;
             tmp = (tmp - i) / this.blocksPerSide;
-            var jSquare = tmp % 2;
-            var iSquare = (tmp - jSquare) / 2;
-            var sqrUvBounds = [
+            const jSquare = tmp % 2;
+            const iSquare = (tmp - jSquare) / 2;
+            const sqrUvBounds = [
                 i / this.blocksPerSide, j / this.blocksPerSide,
                 (i + 1) / this.blocksPerSide, (j + 1) / this.blocksPerSide
             ];
@@ -189,17 +189,17 @@ export class Planet {
         if (square0[0] == square1[0] && square0[1] == square1[1]) {
             return Geom.pointToBoundsDistance(uv, sqrUvBounds);
         } else {
-            var coords: number[] = [];
+            const coords: number[] = [];
             coords[0] = uv[0] - 0.5;
             coords[1] = uv[1] - 0.5;
             coords[2] = 0.5;
-            var posOnCube = this.getUnorientedCoordinates(coords, square0);
+            const posOnCube = this.getUnorientedCoordinates(coords, square0);
             coords[0] = sqrUvBounds[0] - 0.5;
             coords[1] = sqrUvBounds[1] - 0.5;
-            var minOnCube = this.getUnorientedCoordinates(coords, square1);
+            const minOnCube = this.getUnorientedCoordinates(coords, square1);
             coords[0] = sqrUvBounds[2] - 0.5;
             coords[1] = sqrUvBounds[3] - 0.5;
-            var maxOnCube = this.getUnorientedCoordinates(coords, square1);
+            const maxOnCube = this.getUnorientedCoordinates(coords, square1);
             return Geom.pointToBoundsDistance(posOnCube, minOnCube.concat(maxOnCube));
         }
     }
@@ -209,14 +209,14 @@ export class Planet {
         if (square0[0] == square1[0] && square0[1] == square1[1])
             return Geom.dist(ind0, ind1, 0);
         else {
-            var coords: number[] = [];
+            const coords: number[] = [];
             coords[0] = ind0[0] - this.blocksPerSide / 2 + 0.5;
             coords[1] = ind0[1] - this.blocksPerSide / 2 + 0.5;
             coords[2] = this.blocksPerSide / 2;
-            var a = this.getUnorientedCoordinates(coords, square0);
+            const a = this.getUnorientedCoordinates(coords, square0);
             coords[0] = ind1[0] - this.blocksPerSide / 2 + 0.5;
             coords[1] = ind1[1] - this.blocksPerSide / 2 + 0.5;
-            var b = this.getUnorientedCoordinates(coords, square1);
+            const b = this.getUnorientedCoordinates(coords, square1);
             return Geom.dist(a, b, 0);
         }
     }
@@ -226,10 +226,10 @@ export class Planet {
     // t is a translation vector in terms of block indices
     // coordinates in t must be less than blocksPerSide
     blockAdd(ind: number[], square: number[], t: number[]) {
-        var i = ind[0] + t[0];
-        var j = ind[1] + t[1];
-        var coordsOutBounds = 0;
-        var sideInd: number[] = []; // index of the result on a side square
+        const i = ind[0] + t[0];
+        const j = ind[1] + t[1];
+        let coordsOutBounds = 0;
+        let sideInd: number[] = []; // index of the result on a side square
         if (i < 0) {
             sideInd = [-1, j, this.blocksPerSide + i];
             coordsOutBounds++;
@@ -252,22 +252,22 @@ export class Planet {
             // convert sideInd into absolute coordinates
             for (let iCoord = 0; iCoord < 3; iCoord++)
                 sideInd[iCoord] -= (this.blocksPerSide - 1) / 2;
-            var coords = this.getUnorientedCoordinates(sideInd, square);
+            const coords = this.getUnorientedCoordinates(sideInd, square);
 
             // find square
             // find biggest coordinate
-            var wInd = 0;
-            var w = 0;
-            for (var dim = 0; dim < 3; dim++) {
+            let wInd = 0;
+            let w = 0;
+            for (let dim = 0; dim < 3; dim++) {
                 if (Math.abs(coords[dim]) > Math.abs(w)) {
                     w = coords[dim];
                     wInd = dim;
                 }
             }
-            var resSquare = this.squareInds[wInd][Number(w >= 0)];
+            const resSquare = this.squareInds[wInd][Number(w >= 0)];
 
             // convert coords into resSquare coordinate system
-            var blockInd = this.getOrientedCoordinates(coords, resSquare);
+            const blockInd = this.getOrientedCoordinates(coords, resSquare);
             for (let iCoord = 0; iCoord < 3; iCoord++)
                 blockInd[iCoord] += (this.blocksPerSide - 1) / 2;
 
@@ -276,24 +276,24 @@ export class Planet {
     }
 
     getBlockIdFromInd(ind: number[], square: number[]) {
-        var squareId = square[0] * 2 + square[1];
+        const squareId = square[0] * 2 + square[1];
         return (squareId * this.blocksPerSide + ind[0]) * this.blocksPerSide + ind[1];
     }
 
     getUnorientedCoordinates(coords: number[], square: number[]) {
-        var res: number[] = [];
-        var i = square[0];
-        var j = square[1];
-        for (var k = 0; k < 3; k++)
+        const res: number[] = [];
+        const i = square[0];
+        const j = square[1];
+        for (let k = 0; k < 3; k++)
             res[k] = this.coordSigns[k][i][j] * coords[this.coordInds[k][i][j]];
         return res;
     }
 
     getOrientedCoordinates(coords: number[], square: number[]) {
-        var res: number[] = [];
-        var i = square[0];
-        var j = square[1];
-        for (var k = 0; k < 3; k++)
+        const res: number[] = [];
+        const i = square[0];
+        const j = square[1];
+        for (let k = 0; k < 3; k++)
             res[this.coordInds[k][i][j]] = this.coordSigns[k][i][j] * coords[k];
         return res;
     }
@@ -326,9 +326,9 @@ class TerrainVisitor {
     // recursively delete block and all its branches, also removing any representation
     // from the view
     deleteBlockNode(parentNode: Node | null, ind: number, path: string) {
-        var blockList = parentNode ? parentNode.subBlocks : Scene.planet!.blocks;
-        var node = blockList[ind];
-        for (var i in node.subBlocks)
+        const blockList = parentNode ? parentNode.subBlocks : Scene.planet!.blocks;
+        const node = blockList[ind];
+        for (let i in node.subBlocks)
             this.deleteBlockNode(node, Number(i), path + String(i));
         node.subBlocks = [];
         View.remove(node);
@@ -344,9 +344,9 @@ class TerrainVisitor {
         square: number[],
         sqrUvBounds: number[]) {
         // compute distance
-        var d = this.planet.uvToBoundsDistance(this.uv!, this.square!, sqrUvBounds, square);
+        const d = this.planet.uvToBoundsDistance(this.uv!, this.square!, sqrUvBounds, square);
         // add 1 to depthMax because weightedDist must not be 0
-        var weightedDist = this.loadDist * (1 - depth / (1 + this.depthMax));
+        const weightedDist = this.loadDist * (1 - depth / (1 + this.depthMax));
 
         if (node.subBlocks.length) {
             // block has children
@@ -360,12 +360,12 @@ class TerrainVisitor {
             if (d > weightedDist + this.unloadOffset) {
 
                 // node is too far - delete its children if possible
-                var anyNodeInScene = false;
-                var mayUnrefine = true;
+                let anyNodeInScene = false;
+                let mayUnrefine = true;
                 let i: number;
                 // @ts-ignore I know the keys are only numbers
                 for (i in node.subBlocks) {
-                    var subBlock = node.subBlocks[i];
+                    const subBlock = node.subBlocks[i];
                     anyNodeInScene ||= View.isShown(subBlock);
                     let iNei: number;
                     // @ts-ignore I know the keys are numbers
@@ -388,9 +388,9 @@ class TerrainVisitor {
 
                     // @ts-ignore I know the keys are only numbers
                     for (i in node.subBlocks) {
-                        var x = i % 2;
-                        var y = (i - x) / 2;
-                        var childXNeighbors = node.subBlocks[i].neighbors[x];
+                        const x = i % 2;
+                        const y = (i - x) / 2;
+                        const childXNeighbors = node.subBlocks[i].neighbors[x];
                         // since mayUnrefine is true, all sub-blocks have at most
                         // 1 neighbor on each side
                         if (childXNeighbors.length) {
@@ -412,9 +412,9 @@ class TerrainVisitor {
                                 }
                             }
                         }
-                        var childYNeighbors = node.subBlocks[i].neighbors[2 + y];
+                        const childYNeighbors = node.subBlocks[i].neighbors[2 + y];
                         if (childYNeighbors.length) {
-                            var yNeighbors = node.neighbors[2 + y];
+                            const yNeighbors = node.neighbors[2 + y];
                             if (!yNeighbors.length ||
                                 yNeighbors[0] !== childYNeighbors[0]) {
                                 Scene.addNeighbor(node, 2 + y, childYNeighbors[0]);
@@ -444,10 +444,10 @@ class TerrainVisitor {
             } else if (node.subBlocks.length == 4) {
                 // block is not too far and has all its children
 
-                var nodeInScene = View.isShown(node);
-                var facesAreFine =
+                const nodeInScene = View.isShown(node);
+                const facesAreFine =
                     node.faceBufferInd[0] == 1 && node.faceBufferInd[1] == 1;
-                var mayRefine = nodeInScene && facesAreFine;
+                const mayRefine = nodeInScene && facesAreFine;
 
                 // if we're going to show the children node, hide the parent
                 if (mayRefine)
@@ -455,20 +455,20 @@ class TerrainVisitor {
 
                 // visit children nodes
                 // don't visit sub-blocks until all four are available
-                for (i = 0; i < 4; i++) {
+                for (let i = 0; i < 4; i++) {
                     // if node block was shown in scene (and now hidden),
                     // connect the 4 sub-blocks' neighbors and show them
                     if (mayRefine) {
                         // connect internal neighbors
-                        var x = i % 2;
-                        var y = (i - x) / 2;
+                        const x = i % 2;
+                        const y = (i - x) / 2;
                         Scene.setNeighbors(node.subBlocks[i], 1 - x,
                             [node.subBlocks[2 * y + (1 - x)]]);
                         Scene.setNeighbors(node.subBlocks[i], 3 - y,
                             [node.subBlocks[2 * (1 - y) + x]]);
 
                         // connect external neighbors
-                        var xNeighbors = node.neighbors[x];
+                        const xNeighbors = node.neighbors[x];
                         switch (xNeighbors.length) {
                             case 1:
                                 Scene.setNeighbors(node.subBlocks[i], x, [xNeighbors[0]]);
@@ -485,7 +485,7 @@ class TerrainVisitor {
                                 View.updateBlockFaceBuffer(xNeighbors[y]);
                                 break;
                         }
-                        var yNeighbors = node.neighbors[2 + y];
+                        const yNeighbors = node.neighbors[2 + y];
                         switch (yNeighbors.length) {
                             case 1:
                                 Scene.setNeighbors(node.subBlocks[i], 2 + y, [yNeighbors[0]]);
@@ -512,7 +512,7 @@ class TerrainVisitor {
                     }
 
                     // split sqrUvBounds into 4 quarters based on i
-                    var childSqrUvBounds: number[] = Geom.getBoundsQuarter(sqrUvBounds, i);
+                    const childSqrUvBounds: number[] = Geom.getBoundsQuarter(sqrUvBounds, i);
                     this.visitBlockNode(
                         node.subBlocks[i],
                         depth + 1,
@@ -523,15 +523,15 @@ class TerrainVisitor {
                 }
             }
         } else if (d <= weightedDist) {
-            var facesAreFine =
+            const facesAreFine =
                 node.faceBufferInd[0] == 1 && node.faceBufferInd[1] == 1;
-            var surrounded = true; // surrounded by neighbors on all sides
+            let surrounded = true; // surrounded by neighbors on all sides
             for (let iNei = 0; iNei < 4; iNei++)
                 surrounded &&= !!node.neighbors[iNei].length;
             if (facesAreFine && surrounded)
                 // block has no child and is near enough
                 // refine it by spawning 4 children
-                for (var i = 0; i < 4; i++) {
+                for (let i = 0; i < 4; i++) {
                     // schedule block creation after render
                     this.planet.createBlockLater(
                         node,
@@ -605,14 +605,14 @@ export const Scene = {
     },
 
     removeCharacter(characterId: number) {
-        var character = Scene.objects[characterId];
+        const character = Scene.objects[characterId];
         View.removeModel(character.model);
         delete Scene.objects[characterId];
     },
 
     makeWorld() {
         Scene.objects = [];
-        for (var i in Connection.characters)
+        for (let i in Connection.characters)
             Scene.createCharacter(i, Connection.characters[i]);
         Connection.characters = null; // We won't need it anymore.
 
@@ -620,8 +620,8 @@ export const Scene = {
 
         // calling getSquareUvFromSphericalPosition because the square uvs have not been
         // computed client-side
-        var sphericalPosition = Scene.player.sphericalPosition;
-        var squareUv = Game.getSquareUvFromSphericalPosition(
+        const sphericalPosition = Scene.player.sphericalPosition;
+        const squareUv = Game.getSquareUvFromSphericalPosition(
             sphericalPosition.theta, sphericalPosition.phi, Scene.planet);
         Scene.planet!.updateTerrain(squareUv.uv, squareUv.square);
         if (View.onPlayerSetup)
@@ -630,7 +630,7 @@ export const Scene = {
     },
 
     setChild(node: Node, ind: string | number, child: Node) {
-        var blockList = node ? node.subBlocks : this.planet.blocks;
+        const blockList = node ? node.subBlocks : this.planet.blocks;
         if (View['removeChild'])
             View['removeChild'](node, blockList[ind]);
         if (child) blockList[ind] = child;
@@ -640,7 +640,7 @@ export const Scene = {
     },
 
     createBlock(data: BlockData) {
-        var blockList = data.parentNode ? data.parentNode.subBlocks : data.planet.blocks;
+        const blockList = data.parentNode ? data.parentNode.subBlocks : data.planet.blocks;
 
         // check block list still exists
         if (!blockList) {
@@ -660,7 +660,7 @@ export const Scene = {
         };
         View.makeBlock(child, data.square, data.sqrUvBounds, data.planet, data.name);
         Scene.setChild(data.parentNode, data.id, child);
-        var curBlock = blockList[data.id];
+        const curBlock = blockList[data.id];
 
         // if block is not top-level, there is nothing else to do
         if (data.parentNode)
@@ -674,19 +674,19 @@ export const Scene = {
         // show this top-level block right away and connect neighbors
         // iNei represents -x, +x, -y, +y
         View.addBlock(curBlock);
-        for (var iNei = 0; iNei < 4; iNei++) {
-            var dir = iNei % 2;
-            var dim = (iNei - dir) / 2;
-            var bps = data.planet.blocksPerSide
-            var j = data.id % bps;
-            var tmp = (data.id - j) / bps;
-            var i = tmp % bps;
+        for (let iNei = 0; iNei < 4; iNei++) {
+            let dir = iNei % 2;
+            let dim = (iNei - dir) / 2;
+            const bps = data.planet.blocksPerSide
+            const j = data.id % bps;
+            let tmp = (data.id - j) / bps;
+            const i = tmp % bps;
             tmp = (tmp - i) / bps;
-            var jSquare = tmp % 2;
-            var iSquare = (tmp - jSquare) / 2;
-            var t = [0, 0];
+            const jSquare = tmp % 2;
+            const iSquare = (tmp - jSquare) / 2;
+            let t = [0, 0];
             t[dim] = 2 * dir - 1;
-            var indSqr = data.planet.blockAdd([i, j], [iSquare, jSquare], t);
+            const indSqr = data.planet.blockAdd([i, j], [iSquare, jSquare], t);
             if (indSqr == null)
                 continue;
 
@@ -696,20 +696,20 @@ export const Scene = {
                 // flipped over an edge of the cube
                 t = [0, 0, -Math.abs(t[0]) - Math.abs(t[1])];
 
-                var tWorld =
+                const tWorld =
                     data.planet.getUnorientedCoordinates(t, [iSquare, jSquare]);
                 t = data.planet.getOrientedCoordinates(tWorld, indSqr[1]);
                 delete t[2];
             }
 
-            var id = data.planet.getBlockIdFromInd(indSqr[0], indSqr[1]);
-            var neighbor = data.planet.blocks[id];
+            const id = data.planet.getBlockIdFromInd(indSqr[0], indSqr[1]);
+            const neighbor = data.planet.blocks[id];
             if (!neighbor)
                 continue; // no neighbor here
 
             dim = Number(!t[0]);
             dir = Number(t[dim] < 0); // reverse direction for neighbor
-            var iNeiRev = 2 * dim + dir; // reverse neighbor index
+            const iNeiRev = 2 * dim + dir; // reverse neighbor index
 
             // set this node's neighbors and
             // set it as neighbor of its neighbors
@@ -718,9 +718,9 @@ export const Scene = {
             if (neighbor.subBlocks.length == 4) {
                 // magic formulas that give the indices of the two
                 // facing neighbor sub-blocks in the given direction
-                var idA = (1 + dim) * dir;
-                var idB = idA + 2 - dim;
-                var nodeInScene = View.isShown(neighbor);
+                const idA = (1 + dim) * dir;
+                const idB = idA + 2 - dim;
+                const nodeInScene = View.isShown(neighbor);
                 // only if parent neighbor is not shown,
                 // set its children as neighbors
                 if (!nodeInScene)

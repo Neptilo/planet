@@ -14,7 +14,7 @@ export const Controls = {
 }
     
 function sendActionMessage(action: string, on: boolean | string) {
-    var message = {
+    const message = {
         'action': 'setAction',
         'which': action,
         'value': on
@@ -48,13 +48,13 @@ function keyToAction(key: string) {
 
 function switchAction(event: { key: string; }, on: boolean) {
     // check if we are editing the text box
-    var input = document.getElementsByTagName('input')[0];
+    const input = document.getElementsByTagName('input')[0];
     if (input == document.activeElement && event.key != 'Enter')
         return;
 
-    var action = keyToAction(event.key);
+    const action = keyToAction(event.key);
     if (action) {
-        for (var i in characterActions) {
+        for (let i in characterActions) {
             if (action == characterActions[i]) {
                 // wait for server agreement before moving
                 // Scene.player.currentActions[action] = on;
@@ -62,7 +62,7 @@ function switchAction(event: { key: string; }, on: boolean) {
                 break;
             }
         }
-        for (var i in cameraActions) {
+        for (let i in cameraActions) {
             if (action == cameraActions[i]) {
                 View.camera!.currentActions[action] = on;
                 break;
@@ -103,6 +103,6 @@ function handleMouseWheel(e: WheelEvent) {
 }
 
 function handleTextInput(event: Event) {
-    var input = document.getElementsByTagName('input')[0];
+    const input = document.getElementsByTagName('input')[0];
     sendActionMessage('talk', input.value);
 }

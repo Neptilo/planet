@@ -18,11 +18,11 @@ export const Connection = {
     },
 
     onMessage(message: string, ws: WebSocket) {
-        var m = JSON.parse(message);
+        const m = JSON.parse(message);
 
         // find client id
-        var clientId: string;
-        for (var i in Server.activeConnections) {
+        let clientId: string;
+        for (let i in Server.activeConnections) {
             if (Server.activeConnections[i] == ws) {
                 clientId = i;
                 break;
@@ -31,7 +31,7 @@ export const Connection = {
 
         switch (m.action) {
             case 'setAction':
-                var character = Scene.characters[clientId];
+                const character = Scene.characters[clientId];
                 character.currentActions[m.which] = m.value;
                 break;
             default:
@@ -43,10 +43,10 @@ export const Connection = {
 function onConnection(ws: WebSocket) {
     console.info('Connected client #%s', Server.clientNumber);
     // generate new character data
-    var theta = Math.PI / 2;//Math.PI*Math.random();
-    var phi = Math.PI / 2;//2*Math.PI*Math.random();
-    var altitude = Game.getAltitudeFromSphericalPosition(theta, phi, Scene.planet);
-    var characterData = {
+    const theta = Math.PI / 2;//Math.PI*Math.random();
+    const phi = Math.PI / 2;//2*Math.PI*Math.random();
+    const altitude = Game.getAltitudeFromSphericalPosition(theta, phi, Scene.planet);
+    const characterData = {
         'sphericalPosition': {
             'theta': theta,
             'phi': phi,
@@ -59,7 +59,7 @@ function onConnection(ws: WebSocket) {
     // update characters data
     Scene.characters[Server.clientNumber] = new Character(characterData);
 
-    var message: {
+    let message: {
         action: string;
         clientId?: number;
         characters?: { [clientId: string]: Character };
@@ -81,8 +81,8 @@ function onConnection(ws: WebSocket) {
         'characterId': Server.clientNumber,
         'characterData': characterData
     };
-    for (var i in Server.activeConnections) {
-        var client = Server.activeConnections[i];
+    for (let i in Server.activeConnections) {
+        const client = Server.activeConnections[i];
         client.send(JSON.stringify(message));
     }
 
@@ -95,8 +95,8 @@ function onConnection(ws: WebSocket) {
     ws.on('close', function (code: number) {
 
         // find client id
-        var clientId: string;
-        for (var i in Server.activeConnections) {
+        let clientId: string;
+        for (let i in Server.activeConnections) {
             if (Server.activeConnections[i] == ws) {
                 clientId = i;
                 break;
@@ -109,11 +109,11 @@ function onConnection(ws: WebSocket) {
         delete Server.activeConnections[clientId];
 
         // tell other clients that this one left
-        var message = {
+        const message = {
             'action': 'removeCharacter',
             'characterId': clientId
         };
-        for (var i in Server.activeConnections)
+        for (let i in Server.activeConnections)
             Server.activeConnections[i].send(JSON.stringify(message));
     });
 }
@@ -124,10 +124,10 @@ function tick() {
 }
 
 function updateState() {
-    var characterStates = {};
-    for (var i in Scene.characters) {
-        var character = Scene.characters[i];
-        var state: CharacterState = {
+    const characterStates = {};
+    for (let i in Scene.characters) {
+        const character = Scene.characters[i];
+        const state: CharacterState = {
             bearing: character.bearing,
             sphericalPosition: character.sphericalPosition,
             altitude: character.altitude,
@@ -138,14 +138,14 @@ function updateState() {
         characterStates[i] = state;
     }
 
-    var message = {
+    const message = {
         'action': 'updateState',
         'characterStates': characterStates
     }
 
-    var readyStates = ['connecting', 'open', 'closing', 'closed'];
-    for (var i in Server.activeConnections) {
-        var client = Server.activeConnections[i];
+    const readyStates = ['connecting', 'open', 'closing', 'closed'];
+    for (let i in Server.activeConnections) {
+        const client = Server.activeConnections[i];
         try {
             client.send(JSON.stringify(message));
         } catch (error) {

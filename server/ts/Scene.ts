@@ -14,11 +14,11 @@ export class Planet {
 
     constructor() {
         // altitude
-        var planet = this;
+        const planet = this;
         const serverDirName = dirname(fileURLToPath(import.meta.url));
         fs.readFile(serverDirName + '/../img/altitude.png', function (err, data) {
             if (err) throw err;
-            var img = new Canvas.Image;
+            const img = new Canvas.Image;
             img.src = data;
             planet.setAltitudeMap(img);
             console.info('Altitude map loaded');
@@ -26,17 +26,17 @@ export class Planet {
     }
 
     setAltitudeMap(img: Canvas.Image | Canvas.Canvas) {
-        var canvas = Canvas.createCanvas(img.width, img.height);
-        var ctx = canvas.getContext('2d');
+        const canvas = Canvas.createCanvas(img.width, img.height);
+        const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0);
         this.altitudeMap = {};
         this.altitudeMap.width = img.width;
         this.altitudeMap.height = img.height;
 
         // copy only red channel of img into altitudeMap
-        var imgData = ctx.getImageData(0, 0, img.width, img.height).data;
+        const imgData = ctx.getImageData(0, 0, img.width, img.height).data;
         this.altitudeMap.data = [];
-        for (var i = 0; i < imgData.length / 4; i++) {
+        for (let i = 0; i < imgData.length / 4; i++) {
             this.altitudeMap.data[i] = imgData[4 * i];
         }
     }
