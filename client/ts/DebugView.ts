@@ -23,7 +23,7 @@ export const DebugView = {
         camera.lookAt(0, 0, 0);
 
         renderer = new THREE.WebGLRenderer();
-        window.onresize = function () {
+        window.onresize = () => {
             renderer.setSize(width, height);
             camera.aspect = width / height;
             camera.updateProjectionMatrix();

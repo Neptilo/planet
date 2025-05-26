@@ -67,7 +67,7 @@ export const View = {
         renderer = new THREE.WebGLRenderer();
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        window.onresize = function () {
+        window.onresize = () => {
             renderer.setSize(
                 resolution * width,
                 resolution * height);
