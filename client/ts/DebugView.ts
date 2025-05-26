@@ -1,5 +1,6 @@
 import * as THREE from "three";
-import { Planet, Node } from "./Scene.js";
+import { Node } from "./scene/Scene.js";
+import { Planet } from "./scene/Planet.js";
 
 let scene: THREE.Scene;
 let camera: THREE.PerspectiveCamera;

@@ -1,5 +1,7 @@
 import { SphericalPosition } from './Geom.js';
-import { Planet, Scene, Character } from './Scene.js';
+import { Scene } from './scene/Scene.js';
+import { Planet } from "./scene/Planet.js";
+import { Character } from "./scene/Character.js";
 import { View } from './View.js';
 
 let slopeThreshold = 1;

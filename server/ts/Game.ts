@@ -1,4 +1,6 @@
-import { Character, Planet, Scene, SphericalPosition } from './Scene.js';
+import { Scene } from './scene/Scene.js';
+import { Character, SphericalPosition } from './scene/Character.js';
+import { Planet } from './scene/Planet.js';
 
 const slopeThreshold = 1;
 let lastTime = 0;

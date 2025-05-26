@@ -1,6 +1,6 @@
 import { View } from './View.js';
 import { Controls } from './Controls.js';
-import { Scene, CharacterData} from './Scene.js';
+import { Scene, CharacterData} from './scene/Scene.js';
 
 const wsUri = 'ws://' + window.location.hostname + ':8020';
 let ws: WebSocket;

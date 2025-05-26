@@ -1,6 +1,7 @@
 import { Server } from './Server.js';
 import { Game } from './Game.js';
-import { Scene, Character, CharacterData } from './Scene.js';
+import { Scene } from './scene/Scene.js';
+import { Character, CharacterData } from './scene/Character.js';
 import type { WebSocket } from 'ws';
 
 export type CharacterState = CharacterData & {

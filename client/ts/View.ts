@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { Game } from './Game.js';
-import { Character, Planet, Scene, Node } from './Scene.js';
+import { Scene, Node } from './scene/Scene.js';
+import { Character } from './scene/Character.js';
+import { Planet } from './scene/Planet.js';
 
 type BalloonImgData = {
     canvas?: HTMLCanvasElement;

@@ -1,6 +1,7 @@
 import { View } from './View.js';
 import { DebugView } from './DebugView.js';
-import { Node, Planet } from './Scene.js'
+import { Node } from './scene/Scene.js'
+import { Planet } from "./scene/Planet.js";
 
 export const UserView = { ...View };
 
