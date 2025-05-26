@@ -90,10 +90,10 @@ function onConnection(ws: WebSocket) {
     // update active connections
     Server.activeConnections[Server.clientNumber++] = ws;
 
-    ws.on('message', function (message: string) {
+    ws.on('message', (message: string) => {
         Network.onMessage(message, ws);
     });
-    ws.on('close', function (code: number) {
+    ws.on('close', (code: number) => {
 
         // find client id
         let clientId: string;

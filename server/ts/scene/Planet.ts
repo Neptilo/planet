@@ -13,7 +13,7 @@ export class Planet {
         // altitude
         const planet = this;
         const serverDirName = dirname(process.argv[1]);
-        fs.readFile(serverDirName + '/../img/altitude.png', function (err, data) {
+        fs.readFile(serverDirName + '/../img/altitude.png', (err, data) => {
             if (err) throw err;
             const img = new Canvas.Image;
             img.src = data;

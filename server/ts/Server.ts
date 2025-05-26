@@ -17,7 +17,7 @@ export const Server = {
         // So allow any file to be served directly
         httpApp.use(express.static(staticPath));
 
-        httpApp.get('/', function (_req, res) {
+        httpApp.get('/', (_req, res) => {
             res.sendFile(path.join(staticPath, 'index.html'));
         });
 
@@ -25,13 +25,13 @@ export const Server = {
             console.error(err);
         });
 
-        httpApp.listen(80, function () {
+        httpApp.listen(80, () => {
             console.info('HTTP app listening on port 80');
         });
 
         wsApp = enableWs(express()).app;
 
-        wsApp.listen(8020, function () {
+        wsApp.listen(8020, () => {
             console.info('WebSocket app listening on port 8020');
         });
     },
