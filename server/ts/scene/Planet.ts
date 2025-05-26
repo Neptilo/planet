@@ -1,6 +1,5 @@
 import Canvas from 'canvas'
 import fs from 'fs'
-import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
 export class Planet {
@@ -13,7 +12,7 @@ export class Planet {
     constructor() {
         // altitude
         const planet = this;
-        const serverDirName = dirname(fileURLToPath(import.meta.url));
+        const serverDirName = dirname(process.argv[1]);
         fs.readFile(serverDirName + '/../img/altitude.png', function (err, data) {
             if (err) throw err;
             const img = new Canvas.Image;
