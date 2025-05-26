@@ -6,20 +6,23 @@
   <title>The Planet</title>
   <link rel="stylesheet" href="index.css">
   <script type="importmap">
-{
-    "imports": {
-        "three": "./js/three.module.js"
+    {
+        "imports": {
+            "three": "./js/three.module.js"
+        }
     }
-}
   </script>
   <script src="js/Controls.js" type="module"></script>
   <script src="js/Game.js" type="module"></script>
   <script src="js/Geom.js" type="module"></script>
-  <script src="js/Scene.js" type="module"></script>
+  <script src="js/scene/Character.js" type="module"></script>
+  <script src="js/scene/Planet.js" type="module"></script>
+  <script src="js/scene/Scene.js" type="module"></script>
+  <script src="js/scene/TerrainVisitor.js" type="module"></script>
   <script src="js/View.js" type="module"></script>
   <script type="module">
-import { Connection } from './js/Connection.js';
-Connection.init();
+    import { Connection } from './js/Connection.js';
+    Connection.init();
   </script>
 </head>
 

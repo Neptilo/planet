@@ -1,23 +1,32 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-<meta charset="utf-8" />
-<title>The Planet - Debug</title>
-<link rel="stylesheet" href="index.css">
-<script src="js/three.min.js"></script>
-<script src="js/Connection.js"></script>
-<script src="js/Controls.js"></script>
-<script src="js/Game.js"></script>
-<script src="js/Geom.js"></script>
-<script src="js/Scene.js"></script>
-<script src="js/View.js"></script>
-<script src="js/DebugView.js"></script>
-<script src="js/SideDebugView.js"></script>
-<script>
-    Connection.init();
-</script>
+    <meta charset="utf-8" />
+    <title>The Planet - Debug</title>
+    <link rel="stylesheet" href="index.css">
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "./js/three.module.js"
+        }
+    }
+  </script>
+    <script src="js/Controls.js" type="module"></script>
+    <script src="js/Game.js" type="module"></script>
+    <script src="js/Geom.js" type="module"></script>
+    <script src="js/scene/Character.js" type="module"></script>
+    <script src="js/scene/Planet.js" type="module"></script>
+    <script src="js/scene/Scene.js" type="module"></script>
+    <script src="js/scene/TerrainVisitor.js" type="module"></script>
+    <script src="js/DebugView.js" type="module"></script>
+    <script src="js/SideDebugView.js" type="module"></script>
+    <script type="module">
+        import { Connection } from './js/Connection.js';
+        Connection.init();
+    </script>
 </head>
+
 <body>
-	<input type="text" hidden>
+    <input type="text" hidden>
 </body>
-</html>
