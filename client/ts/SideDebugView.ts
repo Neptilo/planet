@@ -1,9 +1,10 @@
 import { View } from './View.js';
 import { DebugView } from './DebugView.js';
+import { Node, Planet } from './Scene.js'
 
-export const UserView = {...View};
+export const UserView = { ...View };
 
-View.init = function() {
+View.init = function () {
     var userView = document.createElement('div');
     var debugView = document.createElement('div');
     userView.style.height = '100%';
@@ -17,69 +18,63 @@ View.init = function() {
     DebugView.init(debugView);
 }
 
-View.makeBlock = function(square, sqrUvBounds, planet, name): THREE.Mesh[] | THREE.Mesh {
-    return [
-        UserView.makeBlock(square, sqrUvBounds, planet, name) as THREE.Mesh,
-        DebugView.makeBlock(square, sqrUvBounds, planet, name)];
+View.makeBlock = function (
+    node: Node,
+    square: number[],
+    sqrUvBounds: number[],
+    planet: Planet,
+    name: string
+) {
+    UserView.makeBlock(node, square, sqrUvBounds, planet, name);
+    DebugView.makeBlock(node, square, sqrUvBounds, planet, name);
 }
 
-View.addBlock = function(block) {
-    UserView.addBlock(View['getUserNode'](block));
-    DebugView.addBlock(View['getDebugNode'](block));
+View.addBlock = function (block) {
+    UserView.addBlock(block);
+    DebugView.addBlock(block);
 }
 
-View.updateBlockFaceBuffer = function(block) {
-    UserView.updateBlockFaceBuffer(View['getUserNode'](block));
+View.updateBlockFaceBuffer = function (block) {
+    UserView.updateBlockFaceBuffer(block);
 }
 
-View['addNeighbors'] = function(node, neighbors) {
-    var debugNeighbors: any[] = [];
+View['addNeighbors'] = function (node: Node, neighbors: Node[]) {
+    var debugNeighbors: Node[] = [];
     for (var iNei = 0; iNei < neighbors.length; ++iNei)
-        debugNeighbors.push(View['getDebugNode'](neighbors[iNei]));
-    DebugView.addNeighbors(View['getDebugNode'](node), debugNeighbors);
+        debugNeighbors.push(neighbors[iNei]);
+    DebugView.addNeighbors(node, debugNeighbors);
 }
 
-View['removeNeighbors'] = function(node, neighbors) {
-    var debugNeighbors: any[] = [];
+View['removeNeighbors'] = function (node: Node, neighbors: Node[]) {
+    var debugNeighbors: Node[] = [];
     for (var iNei = 0; iNei < neighbors.length; ++iNei)
-        debugNeighbors.push(View['getDebugNode'](neighbors[iNei]));
-    DebugView.removeNeighbors(View['getDebugNode'](node), debugNeighbors);
+        debugNeighbors.push(neighbors[iNei]);
+    DebugView.removeNeighbors(node, debugNeighbors);
 }
 
-View['addChild'] = function(node, child) {
-    DebugView.addChild(View['getDebugNode'](node), View['getDebugNode'](child));
+View['addChild'] = function (node: Node, child: Node) {
+    DebugView.addChild(node, child);
 }
 
-View['removeChild'] = function(node, child) {
-    DebugView.removeChild(View['getDebugNode'](node), View['getDebugNode'](child));
+View['removeChild'] = function (node: Node, child: Node) {
+    DebugView.removeChild(node, child);
 }
 
-View['getUserNode'] = function(node) {
-    return node ? {
-        mesh: node.mesh[0],
-        faceBufferInd: node.faceBufferInd
-    } : null;
+View.hide = function (node: Node) {
+    UserView.hide(node);
+    DebugView.hide(node);
 }
 
-View['getDebugNode'] = function(node) {
-    return node ? {mesh: node.mesh[1]} : null;
+View.remove = function (node: Node) {
+    UserView.remove(node);
+    DebugView.remove(node);
 }
 
-View.remove = function(model) {
-    if (model instanceof Array) {
-        UserView.remove(model[0]);
-        DebugView.remove(model[1]);
-    } else {
-        UserView.remove(model);
-        DebugView.remove(model);
-    }
+View.isShown = function (node: Node) {
+    return UserView.isShown(node);
 }
 
-View.isShown = function(model) {
-    return UserView.isShown(model[0]);
-}
-
-View.update = function() {
+View.update = function () {
     UserView.update();
     DebugView.update();
 }

@@ -9,14 +9,11 @@ export const Controls = {
     init() {
         document.onkeydown = handleKeyDown;
         document.onkeyup = handleKeyUp;
-        // IE9, Chrome, Safari, Opera
-        View.canvas!.addEventListener('mousewheel', handleMouseWheel, false);
-        // Firefox
-        View.canvas!.addEventListener('DOMMouseScroll', handleMouseWheel, false);
+        View.canvas!.addEventListener('wheel', handleMouseWheel, false);
     }
 }
     
-function sendActionMessage(action, on) {
+function sendActionMessage(action: string, on: boolean | string) {
     var message = {
         'action': 'setAction',
         'which': action,
@@ -25,39 +22,31 @@ function sendActionMessage(action, on) {
     Connection.send(JSON.stringify(message));
 }
 
-function keyToAction(key) {
+function keyToAction(key: string) {
     // these are KeyboardEvent.key keywords
     switch (key) {
         case ' ':
             return 'jump';
-            break;
         case 'PageUp':
             return 'zoomOut';
-            break;
         case 'PageDown':
             return 'zoomIn';
-            break;
         case 'ArrowLeft':
             return 'left';
-            break;
         case 'ArrowUp':
             return 'forward';
-            break;
         case 'ArrowRight':
             return 'right';
-            break;
         case 'ArrowDown':
             return 'back';
-            break;
         case 'Enter':
             return 'talk';
-            break;
         default:
             return false;
     }
 }
 
-function switchAction(event, on) {
+function switchAction(event: { key: string; }, on: boolean) {
     // check if we are editing the text box
     var input = document.getElementsByTagName('input')[0];
     if (input == document.activeElement && event.key != 'Enter')
@@ -97,23 +86,22 @@ function switchAction(event, on) {
     }
 }
 
-function handleKeyDown(event) {
+function handleKeyDown(event: KeyboardEvent) {
     switchAction(event, true);
 }
 
-function handleKeyUp(event) {
+function handleKeyUp(event: KeyboardEvent) {
     switchAction(event, false);
 }
 
-function handleMouseWheel(e) {
-    var delta = e.wheelDelta || -e.detail;
-    if (delta >= 0)
+function handleMouseWheel(e: WheelEvent) {
+    if (e.detail <= 0)
         View.camera!.zoomIn();
     else
         View.camera!.zoomOut();
 }
 
-function handleTextInput(event) {
+function handleTextInput(event: Event) {
     var input = document.getElementsByTagName('input')[0];
     sendActionMessage('talk', input.value);
 }

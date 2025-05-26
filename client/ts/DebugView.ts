@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { Planet, Node } from "./Scene.js";
 
 let scene: THREE.Scene;
 let camera: THREE.PerspectiveCamera;
@@ -6,10 +7,11 @@ let renderer: THREE.WebGLRenderer;
 let canvas: HTMLCanvasElement;
 let camAngle: 0;
 let ambient: THREE.AmbientLight;
+let nodeToMeshMap = new Map<string, THREE.Mesh>();
 
 export const DebugView = {
 
-    init(container) {
+    init(container: HTMLDivElement) {
         scene = new THREE.Scene();
 
         var width = container.clientWidth;
@@ -21,7 +23,7 @@ export const DebugView = {
         camera.lookAt(0, 0, 0);
 
         renderer = new THREE.WebGLRenderer();
-        window.onresize = function (event) {
+        window.onresize = function (event: any) {
             renderer.setSize(width, height);
             camera.aspect = width / height;
             camera.updateProjectionMatrix();
@@ -39,7 +41,13 @@ export const DebugView = {
         camAngle = 0;
     },
 
-    makeBlock(square, sqrUvBounds, planet, name): THREE.Mesh {
+    makeBlock(
+        node: Node,
+        square: number[],
+        sqrUvBounds: number[],
+        planet: Planet,
+        name: string
+    ) {
         var uSquare = 0.5 * (sqrUvBounds[0] + sqrUvBounds[2]);
         var vSquare = 0.5 * (sqrUvBounds[1] + sqrUvBounds[3]);
         var u = 2 * uSquare - 1;
@@ -54,59 +62,89 @@ export const DebugView = {
         var model = new THREE.Mesh(geometry, material);
         model.name = name;
         model.position.set(vtx[0], vtx[1], vtx[2]);
-        return model;
+        nodeToMeshMap.set(name, model);
     },
 
-    addBlock(block) {
-        scene.add(block.mesh);
+    addBlock(block: Node) {
+        scene.add(nodeToMeshMap.get(block.name));
     },
 
-    addNeighbors(node, neighbors) {
+    addNeighbors(node: Node, neighbors: Node[]) {
+        const nodeMesh = nodeToMeshMap.get(node.name);
         for (var iNei = 0; iNei < neighbors.length; ++iNei) {
             var neighbor = neighbors[iNei];
-            var posDiff = neighbor.mesh.position.clone().sub(node.mesh.position);
+            const neighborMesh = nodeToMeshMap.get(neighbor.name);
+            var posDiff = neighborMesh.position.clone().sub(nodeMesh.position);
             var geometry = new THREE.Geometry();
             geometry.vertices.push(new THREE.Vector3(), posDiff.multiplyScalar(.5));
             var material = new THREE.LineBasicMaterial({ color: 0xFF0000 });
             var line = new THREE.Line(geometry, material);
-            line.name = 'n' + neighbor.mesh.name; // to find it later
-            node.mesh.add(line);
+            line.name = 'n' + neighbor.name; // to find it later
+            nodeMesh.add(line);
         }
     },
 
-    removeNeighbors(node, neighbors) {
+    removeNeighbors(node: Node, neighbors: Node[]) {
         if (!neighbors) return;
+        const nodeMesh = nodeToMeshMap.get(node.name);
         for (var iNei = 0; iNei < neighbors.length; ++iNei) {
             var neighbor = neighbors[iNei];
-            var toRemove = node.mesh.getObjectByName('n' + neighbor.mesh.name);
+            var toRemove = nodeMesh.getObjectByName('n' + neighbor.name);
             if (!toRemove) continue;
-            node.mesh.remove(toRemove);
+            nodeMesh.remove(toRemove);
         }
     },
 
-    addChild(node, child) {
+    addChild(node: Node, child: Node) {
         if (!node || !child) return;
-        var posDiff = child.mesh.position.clone().sub(node.mesh.position);
+        const nodeMesh = nodeToMeshMap.get(node.name);
+        if (!nodeMesh) {
+            console.error('Mesh to add a child to was not found');
+            return;
+        }
+        var posDiff = nodeToMeshMap.get(child.name).position.clone().sub(nodeMesh.position);
         var geometry = new THREE.Geometry();
         geometry.vertices.push(new THREE.Vector3(), posDiff);
         var material = new THREE.LineBasicMaterial({ color: 0x00FF00 });
         var line = new THREE.Line(geometry, material);
-        line.name = 'c' + child.mesh.name; // to find it later
-        node.mesh.add(line);
+        line.name = 'c' + child.name; // to find it later
+        nodeMesh.add(line);
     },
 
-    removeChild(node, child) {
+    removeChild(node: Node, child: Node) {
         if (!node || !child) return;
-        var toRemove = node.mesh.getObjectByName('c' + child.mesh.name);
+        const nodeMesh = nodeToMeshMap.get(node.name);
+        if (!nodeMesh) {
+            console.error('Mesh to remove was not found');
+            return;
+        }
+        var toRemove = nodeMesh.getObjectByName('c' + child.name);
         if (!toRemove) return;
-        node.mesh.remove(toRemove);
+        nodeMesh.remove(toRemove);
     },
 
-    remove(model) {
+    hide(node: Node) {
+        DebugView.removeModel(nodeToMeshMap.get(node.name));
+    },
+
+    remove(node: Node) {
+        DebugView.hide(node);
+        const mesh = nodeToMeshMap.get(node.name);
+
+        // the only children that should still be there are the tree edge representations,
+        // the ones whose name start with a letter
+        for (let child of mesh.children)
+            if (!isNaN(Number(child.name[0])))
+                console.error('Removing node mesh that still has node children');
+
+        nodeToMeshMap.delete(node.name);
+    },
+
+    removeModel(model: THREE.Object3D) {
         scene.remove(model);
     },
 
-    isShown(model) {
+    isShown(model: { parent: THREE.Scene; }) {
         return model.parent === scene;
     },
 

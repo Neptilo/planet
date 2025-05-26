@@ -1,5 +1,7 @@
+export type SphericalPosition = { theta: number; phi: number; rho: number; };
+
 export const Geom = {
-    getBoundsQuarter(bounds, quarterInd) {
+    getBoundsQuarter(bounds: number[], quarterInd: number) {
         var boundsQuarter: number[] = Array.from(bounds);
         var x = quarterInd%2;
         var y = (quarterInd-x)/2;
@@ -12,7 +14,7 @@ export const Geom = {
     // If deg is 0, the Chebyshev distance is calculated
     // If deg is 1, the Manhattan distance is calculated
     // If deg is 2 or undefined, the Euclidian distance is calculated
-    dist(a, b, deg?) {
+    dist(a: number[], b: number[], deg?: number) {
         var dim = a.length;
         if (b.length != dim) {
             console.error('Dimension mismatch in Geom.dist');
@@ -46,13 +48,13 @@ export const Geom = {
 
     // returns the distance between a point [x_0, x_1...] and bounds
     // [min_0, min_1..., max_0, max_1...] in any dimension
-    pointToBoundsDistance(pt, bounds) {
+    pointToBoundsDistance(pt: number[], bounds: number[]) {
         var dim = pt.length;
         if (bounds.length != 2*dim) {
             console.error('Dimension mismatch in pointToBoundsDistance');
             return 0;
         }
-        var nearest: any[] = [];
+        var nearest: number[] = [];
         for (var i = 0; i < dim; i++) {
             nearest.push(pt[i]);
             if (nearest[i] < bounds[i])

@@ -2,7 +2,31 @@ import * as THREE from "three";
 import { View } from './View.js';
 import { Game } from './Game.js';
 import { Connection } from './Connection.js';
-import { Geom } from './Geom.js';
+import { Geom, SphericalPosition } from './Geom.js';
+
+type Table = { width?: number; height?: number; data?: number[]; };
+
+export type CharacterData = {
+    bearing: number;
+    sphericalPosition: SphericalPosition;
+    altitude: number;
+};
+
+export type Node = {
+    subBlocks: Node[];
+    faceBufferInd: number[];
+    name: string;
+    neighbors: { [x: number]: Node[]; };
+}
+
+type BlockData = {
+    parentNode: Node;
+    planet: Planet;
+    id: number;
+    square: number[];
+    sqrUvBounds: number[];
+    name: string;
+}
 
 export class Planet {
     radius = 100;
@@ -42,17 +66,17 @@ export class Planet {
     uSigns = [[-1, 1], [1, 1], [1, -1]];
     blockLoadDistance = 3; // must be at least 1
     blockUnloadDistance = 5; // must be at least 2 more than blockLoadDistance
-    blocks: { [x: number]: any; } = {};
+    blocks: { [id: number]: Node; } = {};
     terrainVisitor: TerrainVisitor = new TerrainVisitor(this);
     material: THREE.MeshBasicMaterial;
-    altitudeMap: any = {};
+    altitudeMap: Table = {};
 
     constructor() {
         // altitude
         var planet = this;
         var img = new Image;
-        img.onload = function () {
-            planet.setAltitudeMap(this);
+        img.onload = () => {
+            planet.setAltitudeMap(img);
             Scene.makeWorld(); // populate scene with objects and update terrain
         };
         img.src = 'img/altitude.png';
@@ -62,7 +86,7 @@ export class Planet {
         this.material = new THREE.MeshBasicMaterial({ map: diffuseTexture });
     }
 
-    setAltitudeMap(img) {
+    setAltitudeMap(img: HTMLImageElement) {
         var canvas = document.createElement('canvas');
         canvas.width = img.width;
         canvas.height = img.height;
@@ -79,7 +103,7 @@ export class Planet {
         }
     }
 
-    updateTerrain(uv: any, square: any) {
+    updateTerrain(uv: number[], square: number[]) {
         var blockInd = Game.getBlockIndFromUv(uv, this);
 
         // unload far away blocks
@@ -145,7 +169,7 @@ export class Planet {
     }
 
     createBlockLater(
-        parentNode: null, id: number, square: any, sqrUvBounds: number[], name: string) {
+        parentNode: Node, id: number, square: number[], sqrUvBounds: number[], name: string) {
         Game.taskList.push({
             handler: Scene.createBlock,
             data: {
@@ -161,7 +185,7 @@ export class Planet {
     // returns the distance between uv and the nearest point on the given uv bounds
     // in UV units
     uvToBoundsDistance(
-        uv: number[], square0: any[], sqrUvBounds: number[], square1: any[]) {
+        uv: number[], square0: number[], sqrUvBounds: number[], square1: number[]) {
         if (square0[0] == square1[0] && square0[1] == square1[1]) {
             return Geom.pointToBoundsDistance(uv, sqrUvBounds);
         } else {
@@ -181,7 +205,7 @@ export class Planet {
     }
 
     // returns the distance in terms of blocks between two blocks
-    blockDistance(ind0: number[], square0: any[], ind1: number[], square1: any[]) {
+    blockDistance(ind0: number[], square0: number[], ind1: number[], square1: number[]) {
         if (square0[0] == square1[0] && square0[1] == square1[1])
             return Geom.dist(ind0, ind1, 0);
         else {
@@ -201,11 +225,11 @@ export class Planet {
     // in the given square, translated by t
     // t is a translation vector in terms of block indices
     // coordinates in t must be less than blocksPerSide
-    blockAdd(ind: any[], square: any, t: any[]) {
+    blockAdd(ind: number[], square: number[], t: number[]) {
         var i = ind[0] + t[0];
         var j = ind[1] + t[1];
         var coordsOutBounds = 0;
-        var sideInd: any[] = []; // index of the result on a side square
+        var sideInd: number[] = []; // index of the result on a side square
         if (i < 0) {
             sideInd = [-1, j, this.blocksPerSide + i];
             coordsOutBounds++;
@@ -256,7 +280,7 @@ export class Planet {
         return (squareId * this.blocksPerSide + ind[0]) * this.blocksPerSide + ind[1];
     }
 
-    getUnorientedCoordinates(coords: number[], square: any[]) {
+    getUnorientedCoordinates(coords: number[], square: number[]) {
         var res: number[] = [];
         var i = square[0];
         var j = square[1];
@@ -265,7 +289,7 @@ export class Planet {
         return res;
     }
 
-    getOrientedCoordinates(coords: number[], square: any[]) {
+    getOrientedCoordinates(coords: number[], square: number[]) {
         var res: number[] = [];
         var i = square[0];
         var j = square[1];
@@ -295,24 +319,30 @@ class TerrainVisitor {
     uv = null; // UV coordinates of the player on the square
     square = null; // square where the player is located
 
-    constructor(planet: any) {
+    constructor(planet: Planet) {
         this.planet = planet;
     }
 
     // recursively delete block and all its branches, also removing any representation
     // from the view
-    deleteBlockNode(parentNode: { subBlocks: any; } | null, ind: number, path: string) {
+    deleteBlockNode(parentNode: Node | null, ind: number, path: string) {
         var blockList = parentNode ? parentNode.subBlocks : Scene.planet!.blocks;
         var node = blockList[ind];
-        View.remove(node.mesh);
         for (var i in node.subBlocks)
             this.deleteBlockNode(node, Number(i), path + String(i));
         node.subBlocks = [];
+        View.remove(node);
         Scene.setChild(parentNode, ind, null);
     }
 
     // recursively visit block to load/unload the sub-blocks that need to be
-    visitBlockNode(node, depth: number, path: string, blockInd: any, square: any, sqrUvBounds: number[]) {
+    visitBlockNode(
+        node: Node,
+        depth: number,
+        path: string,
+        blockInd: number[],
+        square: number[],
+        sqrUvBounds: number[]) {
         // compute distance
         var d = this.planet.uvToBoundsDistance(this.uv!, this.square!, sqrUvBounds, square);
         // add 1 to depthMax because weightedDist must not be 0
@@ -321,7 +351,7 @@ class TerrainVisitor {
         if (node.subBlocks.length) {
             // block has children
 
-            if (!node.mesh) {
+            if (!View.hasMesh(node)) {
                 console.error('Block has children but no mesh');
                 return;
             }
@@ -336,7 +366,7 @@ class TerrainVisitor {
                 // @ts-ignore I know the keys are only numbers
                 for (i in node.subBlocks) {
                     var subBlock = node.subBlocks[i];
-                    anyNodeInScene ||= View.isShown(subBlock.mesh);
+                    anyNodeInScene ||= View.isShown(subBlock);
                     let iNei: number;
                     // @ts-ignore I know the keys are numbers
                     for (iNei in subBlock.neighbors) {
@@ -364,7 +394,7 @@ class TerrainVisitor {
                         // since mayUnrefine is true, all sub-blocks have at most
                         // 1 neighbor on each side
                         if (childXNeighbors.length) {
-                            var xNeighbors = node.neighbors[x];
+                            const xNeighbors = node.neighbors[x];
                             // We may already have added 1 neighbor to the parent node.
                             // Check it doesn't already have the neighbor we're about
                             // to add
@@ -414,18 +444,18 @@ class TerrainVisitor {
             } else if (node.subBlocks.length == 4) {
                 // block is not too far and has all its children
 
-                var nodeInScene = View.isShown(node.mesh);
+                var nodeInScene = View.isShown(node);
                 var facesAreFine =
                     node.faceBufferInd[0] == 1 && node.faceBufferInd[1] == 1;
                 var mayRefine = nodeInScene && facesAreFine;
 
                 // if we're going to show the children node, hide the parent
                 if (mayRefine)
-                    View.remove(node.mesh);
+                    View.hide(node);
 
                 // visit children nodes
                 // don't visit sub-blocks until all four are available
-                for ( i = 0; i < 4; i++) {
+                for (i = 0; i < 4; i++) {
                     // if node block was shown in scene (and now hidden),
                     // connect the 4 sub-blocks' neighbors and show them
                     if (mayRefine) {
@@ -514,7 +544,7 @@ class TerrainVisitor {
     }
 }
 
-class Character {
+export class Character {
     // characteristics
     speed = .007;
     angularSpeed = .002;
@@ -526,19 +556,19 @@ class Character {
     };
 
     // state
-    bearing: any;
-    sphericalPosition: any;
-    altitude: any;
-    groundAltitude: any;
+    bearing: number;
+    sphericalPosition: SphericalPosition;
+    altitude: number;
+    groundAltitude: number;
     velocity = [0, 0];
     currentActions = {};
     balloonText = '';
 
     // view
     model: THREE.Mesh;
-    balloonModel;
+    balloonModel: THREE.Mesh;
 
-    constructor(data: { bearing: any; sphericalPosition: any; altitude: any; }) {
+    constructor(data: CharacterData) {
         this.bearing = data.bearing;
         this.sphericalPosition = data.sphericalPosition;
         this.altitude = data.altitude;
@@ -563,20 +593,20 @@ class Character {
 
 export const Scene = {
     planet: null as Planet | null,
-    objects: null as any,
-    player: null as any,
+    objects: null as Character[],
+    player: null as Character,
 
     init() {
         Scene.planet = new Planet; // will in turn call makeWorld asynchronously
     },
 
-    createCharacter(characterId: string, characterData: any) {
+    createCharacter(characterId: string, characterData: CharacterData) {
         Scene.objects[characterId] = new Character(characterData);
     },
 
-    removeCharacter(characterId: string | number) {
+    removeCharacter(characterId: number) {
         var character = Scene.objects[characterId];
-        View.remove(character.model);
+        View.removeModel(character.model);
         delete Scene.objects[characterId];
     },
 
@@ -599,7 +629,7 @@ export const Scene = {
         Game.init();
     },
 
-    setChild(node: { subBlocks: any; } | null, ind: string | number, child: any) {
+    setChild(node: Node, ind: string | number, child: Node) {
         var blockList = node ? node.subBlocks : this.planet.blocks;
         if (View['removeChild'])
             View['removeChild'](node, blockList[ind]);
@@ -609,7 +639,7 @@ export const Scene = {
             View['addChild'](node, child);
     },
 
-    createBlock(data) {
+    createBlock(data: BlockData) {
         var blockList = data.parentNode ? data.parentNode.subBlocks : data.planet.blocks;
 
         // check block list still exists
@@ -622,17 +652,14 @@ export const Scene = {
             return;
 
         // create block
-        Scene.setChild(
-            data.parentNode,
-            data.id,
-            {
-                mesh: View.makeBlock(
-                    data.square, data.sqrUvBounds, data.planet, data.name),
-                subBlocks: [],
-                faceBufferInd: [1, 1],
-                neighbors: [[], [], [], []],
-                name: data.name
-            });
+        const child = {
+            subBlocks: [],
+            faceBufferInd: [1, 1],
+            neighbors: [[], [], [], []],
+            name: data.name
+        };
+        View.makeBlock(child, data.square, data.sqrUvBounds, data.planet, data.name);
+        Scene.setChild(data.parentNode, data.id, child);
         var curBlock = blockList[data.id];
 
         // if block is not top-level, there is nothing else to do
@@ -693,7 +720,7 @@ export const Scene = {
                 // facing neighbor sub-blocks in the given direction
                 var idA = (1 + dim) * dir;
                 var idB = idA + 2 - dim;
-                var nodeInScene = View.isShown(neighbor.mesh);
+                var nodeInScene = View.isShown(neighbor);
                 // only if parent neighbor is not shown,
                 // set its children as neighbors
                 if (!nodeInScene)
@@ -707,7 +734,11 @@ export const Scene = {
         }
     },
 
-    setNeighbors(node: { neighbors: { [x: string]: any; }; }, ind: string | number, neighbors: any) {
+    setNeighbors(node: Node, ind: number, neighbors: Node[]) {
+        if (!node) {
+            console.error('Setting neighbors of an undefined node');
+            return;
+        }
         if (View['removeNeighbors'])
             View['removeNeighbors'](node, node.neighbors[ind]);
         node.neighbors[ind] = neighbors;
@@ -715,7 +746,11 @@ export const Scene = {
             View['addNeighbors'](node, neighbors);
     },
 
-    addNeighbor(node: { neighbors: { [x: string]: any[]; }; }, ind: string | number, neighbor: any) {
+    addNeighbor(node: Node, ind: string | number, neighbor: Node) {
+        if (!node) {
+            console.error('Adding neighbors to an undefined node');
+            return;
+        }
         node.neighbors[ind].push(neighbor);
         if (View['addNeighbors'])
             View['addNeighbors'](node, [neighbor]);

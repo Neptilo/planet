@@ -1,17 +1,18 @@
-import { Scene } from './Scene.js';
+import { SphericalPosition } from './Geom.js';
+import { Planet, Scene, Character } from './Scene.js';
 import { View } from './View.js';
 
 let slopeThreshold = 1;
 let lastTime = 0;
 
 export const Game = {
-    taskList: [] as any[],
+    taskList: [] as { handler: Function, data: {} }[],
 
     init() {
         tick();
     },
 
-    getAltitudeFromUv(uvSquare, square, planet) {
+    getAltitudeFromUv(uvSquare: number[], square: number[], planet: Planet) {
         var xTex = Math.round((planet.altitudeMap.width - 1) * (square[0] + uvSquare[0]) / 3);
         var yTex = Math.round((planet.altitudeMap.height / 2 - 1) * (1 - uvSquare[1]));
         if (square[1] == 0) yTex += planet.altitudeMap.height / 2;
@@ -19,7 +20,7 @@ export const Game = {
         return planet.minAltitude + (planet.maxAltitude - planet.minAltitude) * altitudePix / 255;
     },
 
-    getSquareUvFromSphericalPosition(theta, phi, planet) {
+    getSquareUvFromSphericalPosition(theta: number, phi: number, planet: Planet) {
         var newCoords: number[] = []; // normalized coordinates
         newCoords[0] = Math.sin(theta) * Math.sin(phi);
         newCoords[1] = -Math.sin(theta) * Math.cos(phi);
@@ -45,12 +46,12 @@ export const Game = {
     },
 
     // better not call this and call getAltitudeFromUv directly if squareUv is available
-    getAltitudeFromSphericalPosition(theta, phi, planet) {
+    getAltitudeFromSphericalPosition(theta: number, phi: number, planet: Planet) {
         var squareUv = Game.getSquareUvFromSphericalPosition(theta, phi, planet);
         return Game.getAltitudeFromUv(squareUv.uv, squareUv.square, planet);
     },
 
-    getBlockIndFromUv(uv, planet) {
+    getBlockIndFromUv(uv: number[], planet: Planet) {
         return [Math.floor(uv[0] * planet.blocksPerSide), Math.floor(uv[1] * planet.blocksPerSide)];
     }
 }
@@ -90,7 +91,7 @@ function tick() {
 // rho being the distance to the center of the sphere
 // and given an initial bearing
 // and a distance to go through
-function getNewSphericalPostion(sphericalPosition, bearing, distance) {
+function getNewSphericalPostion(sphericalPosition: SphericalPosition, bearing: number, distance: number) {
     var th = sphericalPosition.theta;
     var b = bearing;
     var d = distance / sphericalPosition.rho;
@@ -98,7 +99,7 @@ function getNewSphericalPostion(sphericalPosition, bearing, distance) {
     var newPhi = sphericalPosition.phi + Math.atan2(
         Math.sin(b) * Math.sin(d) * Math.sin(th),
         Math.cos(d) - Math.cos(th) * Math.cos(newTheta));
-    var newBearing;
+    var newBearing: number;
     if (d >= 0)
         newBearing = Math.atan2(
             Math.sin(b) * Math.sin(d) * Math.sin(th),
@@ -115,31 +116,31 @@ function getNewSphericalPostion(sphericalPosition, bearing, distance) {
 }
 
 // better not call this and call getBlockIndFromUv directly if squareUv is available
-function getBlockIndFromSphericalPosition(theta, phi, planet) {
+function getBlockIndFromSphericalPosition(theta: number, phi: number, planet: Planet) {
     var squareUv = Game.getSquareUvFromSphericalPosition(theta, phi, planet);
     return Game.getBlockIndFromUv(squareUv.uv, planet)
 }
 
-function moveObjects(deltaTime, planet) {
+function moveObjects(deltaTime: number, planet: Planet) {
     var characters = Scene.objects;
     for (var i in characters)
         moveObject(characters[i], deltaTime, planet);
 }
 
-function updateTerrain(player, planet) {
+function updateTerrain(player: Character, planet: Planet) {
     var sphericalPos = player.sphericalPosition;
     var squareUv = Game.getSquareUvFromSphericalPosition(
         sphericalPos.theta, sphericalPos.phi, planet);
     planet.updateTerrain(squareUv.uv, squareUv.square);
 }
 
-function applyGravity(deltaTime, planet) {
+function applyGravity(deltaTime: number, planet: Planet) {
     var objects = Scene.objects;
     for (var i in objects)
         objects[i].velocity[1] -= deltaTime * planet.gravity;
 }
 
-function moveObject(object, deltaTime, planet) {
+function moveObject(object: Character, deltaTime: number, planet: Planet) {
     if (!deltaTime)
         return;
 

@@ -1,12 +1,12 @@
 import { View } from './View.js';
 import { Controls } from './Controls.js';
-import { Scene } from './Scene.js';
+import { Scene, CharacterData} from './Scene.js';
 
 const wsUri = 'ws://' + window.location.hostname + ':8020';
-let ws;
+let ws: WebSocket;
 
 export const Connection = {
-    characters: null as any,
+    characters: null as CharacterData[],
     clientId: -1,
 
     init() {
@@ -17,20 +17,20 @@ export const Connection = {
         ws.onerror = onError;
     },
 
-    send(message) {
+    send(message: string | ArrayBuffer | Blob | ArrayBufferView<ArrayBufferLike>) {
         ws.send(message);
     }
 }
 
-function onOpen(evt) {
+function onOpen(_evt: Event) {
     console.info("Connected to WebSocket server");
 }
 
-function onClose(evt) {
+function onClose(_evt: CloseEvent) {
     console.info("Disconnected from WebSocket server");
 }
 
-function onMessage(evt) {
+function onMessage(evt: { data: string; }) {
     var m = JSON.parse(evt.data);
     switch (m.action) {
         case 'acceptConnection':
@@ -71,6 +71,6 @@ function onMessage(evt) {
     }
 }
 
-function onError(evt) {
-    console.error('WebSocket error: ' + evt.data);
+function onError(evt: Event) {
+    console.error('WebSocket error: ' + evt);
 }
