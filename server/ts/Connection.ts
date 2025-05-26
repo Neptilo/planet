@@ -1,6 +1,13 @@
 import { Server } from './Server.js';
 import { Game } from './Game.js';
-import { Scene, Character } from './Scene.js';
+import { Scene, Character, CharacterData } from './Scene.js';
+import type { WebSocket } from 'ws';
+
+export type CharacterState = CharacterData & {
+    groundAltitude: number;
+    velocity: number[];
+    currentActions: object;
+};
 
 export const Connection = {
     init() {
@@ -10,11 +17,11 @@ export const Connection = {
         tick();
     },
 
-    onMessage(message, ws) {
+    onMessage(message: string, ws: WebSocket) {
         var m = JSON.parse(message);
 
         // find client id
-        var clientId;
+        var clientId: string;
         for (var i in Server.activeConnections) {
             if (Server.activeConnections[i] == ws) {
                 clientId = i;
@@ -33,7 +40,7 @@ export const Connection = {
     }
 }
 
-function onConnection(ws) {
+function onConnection(ws: WebSocket) {
     console.info('Connected client #%s', Server.clientNumber);
     // generate new character data
     var theta = Math.PI / 2;//Math.PI*Math.random();
@@ -42,7 +49,8 @@ function onConnection(ws) {
     var characterData = {
         'sphericalPosition': {
             'theta': theta,
-            'phi': phi
+            'phi': phi,
+            'rho': 0
         },
         'altitude': altitude,
         'bearing': 2 * Math.PI * Math.random()
@@ -51,7 +59,13 @@ function onConnection(ws) {
     // update characters data
     Scene.characters[Server.clientNumber] = new Character(characterData);
 
-    var message;
+    var message: {
+        action: string;
+        clientId?: number;
+        characters?: { [clientId: string]: Character };
+        characterId?: number;
+        characterData?: CharacterData;
+    };
 
     // tell new client about the configuration of the world
     message = {
@@ -75,13 +89,13 @@ function onConnection(ws) {
     // update active connections
     Server.activeConnections[Server.clientNumber++] = ws;
 
-    ws.on('message', function (message) {
+    ws.on('message', function (message: string) {
         Connection.onMessage(message, ws);
     });
-    ws.on('close', function (code) {
+    ws.on('close', function (code: number) {
 
         // find client id
-        var clientId;
+        var clientId: string;
         for (var i in Server.activeConnections) {
             if (Server.activeConnections[i] == ws) {
                 clientId = i;
@@ -113,13 +127,14 @@ function updateState() {
     var characterStates = {};
     for (var i in Scene.characters) {
         var character = Scene.characters[i];
-        var state: any = {};
-        state.bearing = character.bearing;
-        state.sphericalPosition = character.sphericalPosition;
-        state.altitude = character.altitude;
-        state.groundAltitude = character.groundAltitude;
-        state.velocity = character.velocity;
-        state.currentActions = character.currentActions;
+        var state: CharacterState = {
+            bearing: character.bearing,
+            sphericalPosition: character.sphericalPosition,
+            altitude: character.altitude,
+            groundAltitude: character.groundAltitude,
+            velocity: character.velocity,
+            currentActions: character.currentActions
+        };
         characterStates[i] = state;
     }
 

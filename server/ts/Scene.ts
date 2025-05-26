@@ -3,12 +3,14 @@ import fs from 'fs'
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
+export type SphericalPosition = { theta: number; phi: number; rho: number; };
+
 export class Planet {
     radius = 100;
     minAltitude = -2.5;
     maxAltitude = 2.5;
     gravity = .0001;
-    altitudeMap;
+    altitudeMap: { width?: number; height?: number; data?: number[]; };
 
     constructor() {
         // altitude
@@ -23,7 +25,7 @@ export class Planet {
         });
     }
 
-    setAltitudeMap(img) {
+    setAltitudeMap(img: Canvas.Image | Canvas.Canvas) {
         var canvas = Canvas.createCanvas(img.width, img.height);
         var ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0);
@@ -40,6 +42,8 @@ export class Planet {
     }
 }
 
+export type CharacterData = { sphericalPosition: SphericalPosition; altitude: number; bearing: number; }
+
 export class Character {
     // characteristics
     speed = .007;
@@ -52,14 +56,14 @@ export class Character {
     };
 
     // state
-    bearing;
-    sphericalPosition;
-    altitude;
-    groundAltitude;
+    bearing: number;
+    sphericalPosition: SphericalPosition;
+    altitude: number;
+    groundAltitude: number;
     velocity = [0, 0];
     currentActions = {};
 
-    constructor(data) {
+    constructor(data: CharacterData) {
         // state
         this.bearing = data.bearing;
         this.sphericalPosition = data.sphericalPosition;
@@ -70,7 +74,7 @@ export class Character {
 
 export const Scene = {
     planet: null as Planet | null,
-    characters: null as any,
+    characters: null as {[clientId: string]: Character},
     init() {
         Scene.planet = new Planet;
         Scene.characters = {};

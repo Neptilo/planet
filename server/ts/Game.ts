@@ -1,4 +1,4 @@
-import { Scene } from './Scene.js';
+import { Character, Planet, Scene, SphericalPosition } from './Scene.js';
 
 const slopeThreshold = 1;
 let lastTime = 0;
@@ -8,7 +8,7 @@ export const Game = {
         tick();
     },
 
-    getAltitudeFromUv(uSquare, vSquare, square, planet) {
+    getAltitudeFromUv(uSquare: number, vSquare: number, square: number[], planet: Planet) {
         var xTex = Math.round((planet.altitudeMap.width - 1) * (square[0] + uSquare) / 3);
         var yTex = Math.round((planet.altitudeMap.height / 2 - 1) * (1 - vSquare));
         if (square[1] == 0) yTex += planet.altitudeMap.height / 2;
@@ -16,7 +16,7 @@ export const Game = {
         return planet.minAltitude + (planet.maxAltitude - planet.minAltitude) * altitudePix / 255;
     },
 
-    getAltitudeFromSphericalPosition(theta, phi, planet) {
+    getAltitudeFromSphericalPosition(theta: number, phi: number, planet: Planet) {
         var newCoords: number[] = []; // normalized coordinates
         newCoords[0] = Math.sin(theta) * Math.sin(phi);
         newCoords[1] = -Math.sin(theta) * Math.cos(phi);
@@ -61,7 +61,7 @@ function tick() {
 // rho being the distance to the center of the sphere
 // and given an initial bearing
 // and a distance to go through
-function getNewSphericalPostion(sphericalPosition, bearing, distance) {
+function getNewSphericalPostion(sphericalPosition: SphericalPosition, bearing: number, distance: number) {
     var th = sphericalPosition.theta;
     var b = bearing;
     var d = distance / sphericalPosition.rho;
@@ -69,7 +69,7 @@ function getNewSphericalPostion(sphericalPosition, bearing, distance) {
     var newPhi = sphericalPosition.phi + Math.atan2(
         Math.sin(b) * Math.sin(d) * Math.sin(th),
         Math.cos(d) - Math.cos(th) * Math.cos(newTheta));
-    var newBearing;
+    var newBearing: number;
     if (d >= 0)
         newBearing = Math.atan2(
             Math.sin(b) * Math.sin(d) * Math.sin(th),
@@ -85,7 +85,7 @@ function getNewSphericalPostion(sphericalPosition, bearing, distance) {
     }
 }
 
-function moveObjects(deltaTime, planet) {
+function moveObjects(deltaTime: number, planet: Planet) {
     var characters = Scene.characters;
     for (var i in characters) {
         var character = characters[i];
@@ -93,14 +93,14 @@ function moveObjects(deltaTime, planet) {
     }
 }
 
-function applyGravity(deltaTime, planet) {
+function applyGravity(deltaTime: number, planet: Planet) {
     var characters = Scene.characters;
     for (var i in characters) {
         characters[i].velocity[1] -= deltaTime * planet.gravity;
     }
 }
 
-function moveObject(object, deltaTime, planet) {
+function moveObject(object: Character, deltaTime: number, planet: Planet) {
     // ground contact test
     if (object.altitude <= object.groundAltitude) {
         // touching the ground: apply actions

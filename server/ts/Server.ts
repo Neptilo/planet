@@ -3,7 +3,7 @@ import path from 'path';
 import enableWs from 'express-ws';
 import { fileURLToPath } from 'url';
 
-let wsApp;
+let wsApp: enableWs.Application;
 export const Server = {
     clientNumber: 0,
     activeConnections: [] as any[],
@@ -36,7 +36,7 @@ export const Server = {
         });
     },
 
-    setOnConnection(callback) {
+    setOnConnection(callback: enableWs.WebsocketRequestHandler) {
         wsApp.ws('/', callback);
     }
 }
