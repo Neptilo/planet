@@ -95,7 +95,8 @@ function handleKeyUp(event: KeyboardEvent) {
 }
 
 function handleMouseWheel(e: WheelEvent) {
-    if (e.detail <= 0)
+    const delta = e.deltaY || -e.detail;
+    if (delta >= 0)
         View.camera!.zoomIn();
     else
         View.camera!.zoomOut();
