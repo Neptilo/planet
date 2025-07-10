@@ -15,8 +15,8 @@
   "type": "module",
   "main": "server/main.js",
   "scripts": {
-    "build:client": "tsc -p client/tsconfig.json && cp client/lib/three.module.js client/js/",
-    "build:server": "tsc -p server/tsconfig.json",
+    "build:client": "npx tsc -p client/tsconfig.json && cp client/lib/three.module.js client/js/",
+    "build:server": "npx tsc -p server/tsconfig.json",
     "build": "npm run build:client && npm run build:server",
     "server": "node server/js/main.js",
     "all": "npm run build && npm run server"
@@ -31,6 +31,7 @@
   "devDependencies": {
     "@types/express": "^5.0.2",
     "@types/express-ws": "^3.0.5",
-    "@types/three": "^0.89.0"
+    "@types/three": "^0.89.0",
+    "typescript": "^5.8.3"
   }
 }

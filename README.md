@@ -23,8 +23,8 @@ If you only want to build the client, run `npm run build:client`.
 Start the server: `npm run server`.
 
 Open the game from a client: type the server's IP in the address bar of
-a browser, e.g. `127.0.0.1`.
+a browser, e.g. `http://127.0.0.1`.
 
 ## Debug
 
-To start the game alongside a debug view, open the page `debug.html`, e.g. `127.0.0.1/debug.html`.
+To start the game alongside a debug view, open the page `debug.html`, e.g. `http://127.0.0.1/debug.html`.
